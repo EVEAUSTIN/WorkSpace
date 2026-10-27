@@ -1,0 +1,14 @@
+{
+  "name": "qijian-cloudbase-sdk",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "@cloudbase/js-sdk": "3.10.4"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  }
+}
