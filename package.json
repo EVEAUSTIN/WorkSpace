@@ -1,0 +1,24 @@
+{
+  "name": "qijian-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "栖间个人工作台",
+  "main": "desktop/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis",
+    "test:desktop": "node --test tests/desktop-storage.test.cjs"
+  },
+  "devDependencies": {
+    "electron": "45.0.0",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "cn.qijian.workspace",
+    "productName": "栖间工作台",
+    "directories": {"output": "dist"},
+    "files": ["desktop/**", "index.html", "assets/**", "cloudbase-test.html"],
+    "win": {"target": "nsis"},
+    "nsis": {"oneClick": false, "allowToChangeInstallationDirectory": true, "deleteAppDataOnUninstall": false}
+  }
+}

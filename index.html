@@ -5235,6 +5235,8 @@ if(__exports != exports)module.exports = exports;return module.exports}));
 <script>
 "use strict";
 
+const workspaceStorage = window.qijianDesktop?.storage || window.localStorage;
+
 /* ==================== AI Markdown 与本次问答记录 ==================== */
 // Records are held in memory for this page session. Clearing them never removes application data.
 const chatState={home:{messages:[],epoch:0,status:""},medicine:{messages:[],epoch:0,status:""},travel:{messages:[],epoch:0,status:""}};
@@ -5567,7 +5569,7 @@ function makeStore(key,initial,validate,label,normalize=x=>x){
   };
 
   try{
-    const raw=localStorage.getItem(key);
+    const raw=workspaceStorage.getItem(key);
 
     if(raw!==null){
       const d=normalize(JSON.parse(raw));
@@ -5593,7 +5595,7 @@ function persist(s,next){
   }
 
   try{
-    localStorage.setItem(s.key,JSON.stringify(next));
+    workspaceStorage.setItem(s.key,JSON.stringify(next));
     s.value=next;
     renderAll();
     return true;
@@ -7126,6 +7128,7 @@ function activeNote(){
 }
 
 function openDatabase(){
+  if(window.qijianDesktop)return Promise.resolve({close(){}});
   return new Promise((resolve,reject)=>{
     const r=indexedDB.open("qijian-notebook",1);
 
@@ -7140,6 +7143,9 @@ function openDatabase(){
 }
 
 function readDatabase(){
+  if(window.qijianDesktop){
+    try{const raw=workspaceStorage.getItem("desktop:notebook");return Promise.resolve(raw===null?undefined:JSON.parse(raw));}catch(e){return Promise.reject(e);}
+  }
   return new Promise((resolve,reject)=>{
     const r=database
       .transaction("data","readonly")
@@ -7152,6 +7158,9 @@ function readDatabase(){
 }
 
 function writeDatabase(v){
+  if(window.qijianDesktop){
+    try{workspaceStorage.setItem("desktop:notebook",JSON.stringify(v));return Promise.resolve();}catch(e){return Promise.reject(e);}
+  }
   return new Promise((resolve,reject)=>{
     const t=database.transaction("data","readwrite");
     t.objectStore("data").put(v,"workspace");
@@ -9306,7 +9315,7 @@ let aiConfig={
 let aiBusy=false;
 
 try{
-  const c=JSON.parse(localStorage.getItem(AI_KEY)||"null");
+  const c=JSON.parse(workspaceStorage.getItem(AI_KEY)||"null");
 
   if(
     c &&
@@ -9397,7 +9406,7 @@ function saveAI(notify=true){
       models:changed?[]:aiConfig.models
     };
 
-    localStorage.setItem(AI_KEY,JSON.stringify(c));
+    workspaceStorage.setItem(AI_KEY,JSON.stringify(c));
     aiConfig=c;
     renderAISettings();
 
@@ -9494,7 +9503,7 @@ $("#ai-forget-key").onclick=()=>{
   };
 
   try{
-    localStorage.setItem(AI_KEY,JSON.stringify(c));
+    workspaceStorage.setItem(AI_KEY,JSON.stringify(c));
     aiConfig=c;
     renderAISettings();
     toast("已清除本机保存的密钥。");
@@ -9540,7 +9549,7 @@ $("#ai-fetch-models").onclick=async()=>{
       aiConfig.model=ids[0];
     }
 
-    localStorage.setItem(AI_KEY,JSON.stringify(aiConfig));
+    workspaceStorage.setItem(AI_KEY,JSON.stringify(aiConfig));
     renderAISettings();
 
     $("#ai-settings-message").textContent=
@@ -10365,12 +10374,12 @@ async function executeAIActions(actions){
 
   const originals=staged.map(([s])=>[
     s,
-    localStorage.getItem(s.key)
+    workspaceStorage.getItem(s.key)
   ]);
 
   try{
     for(const[s,v]of staged){
-      localStorage.setItem(s.key,JSON.stringify(v));
+      workspaceStorage.setItem(s.key,JSON.stringify(v));
     }
 
     if(notesChanged)await writeDatabase(n);
@@ -10380,9 +10389,9 @@ async function executeAIActions(actions){
     for(const[s,raw]of originals){
       try{
         if(raw===null){
-          localStorage.removeItem(s.key);
+          workspaceStorage.removeItem(s.key);
         }else{
-          localStorage.setItem(s.key,raw);
+          workspaceStorage.setItem(s.key,raw);
         }
       }catch{
         rollbackOK=false;
@@ -11963,7 +11972,7 @@ function renderLiterature(){
   $('#lit-source-directory').innerHTML=LIT_JOURNALS.map(j=>'<div class="lit-source-tile"><a href="'+esc(j.url)+'" target="_blank" rel="noopener noreferrer">'+esc(j.name)+' ↗</a><p>'+esc(j.focus)+'<br>ISSN '+j.issn+' · '+(litState.loading?'正在检索':litState.failed.includes(j.issn)?'本次连接失败':litState.success.includes(j.issn)?'本次已更新':'尚未检索')+'</p></div>').join('');
 }
 function cacheLiterature(){
-  try{localStorage.setItem(LIT_CACHE,JSON.stringify({version:1,days:litState.coverageDays,editionDate:litState.editionDate,updatedAt:litState.updatedAt,success:litState.success,failed:litState.failed,items:litState.items.slice(0,160)}));}catch{toast('文献缓存未能保存，当前结果仍可阅读。');}
+  try{workspaceStorage.setItem(LIT_CACHE,JSON.stringify({version:1,days:litState.coverageDays,editionDate:litState.editionDate,updatedAt:litState.updatedAt,success:litState.success,failed:litState.failed,items:litState.items.slice(0,160)}));}catch{toast('文献缓存未能保存，当前结果仍可阅读。');}
 }
 async function loadLiterature(){
   const run=++litState.run;litState.controller?.abort();const controller=new AbortController();litState.controller=controller;
@@ -12002,7 +12011,7 @@ function maybeUpdateLiterature(){
 }
 function initializeLiterature(){
   try{
-    const cached=JSON.parse(localStorage.getItem(LIT_CACHE)||'null');
+    const cached=JSON.parse(workspaceStorage.getItem(LIT_CACHE)||'null');
     if(validLitCache(cached)){
       litState.items=cached.items.map(p=>{const journal=LIT_JOURNALS.find(j=>j.issn===p.issn);return {...p,journal:journal.name,publisher:journal.publisher,journalURL:journal.url};});
       litState.days=cached.days;litState.coverageDays=cached.days;litState.editionDate=cached.editionDate;litState.updatedAt=cached.updatedAt;litState.success=cached.success;litState.failed=Array.isArray(cached.failed)?cached.failed.filter(x=>LIT_JOURNALS.some(j=>j.issn===x)):[];$('#lit-window').value=String(cached.days);
@@ -12095,7 +12104,7 @@ document.addEventListener("visibilitychange",()=>{
 window.addEventListener("storage",e=>{
   if(e.key===AI_KEY){
     try{
-      const c=JSON.parse(localStorage.getItem(AI_KEY)||"null");
+      const c=JSON.parse(workspaceStorage.getItem(AI_KEY)||"null");
 
       if(
         c &&
@@ -12122,7 +12131,7 @@ window.addEventListener("storage",e=>{
     if(e.key!==s.key&&e.key!==null)continue;
 
     try{
-      const raw=localStorage.getItem(s.key);
+      const raw=workspaceStorage.getItem(s.key);
 
       const empty=s===M
         ?[]
