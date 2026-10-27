@@ -6,6 +6,7 @@ function request(operation, key, value) {
   return result.value;
 }
 contextBridge.exposeInMainWorld('qijianDesktop', {
+  commit: (writes, archives = []) => request('batch', 'desktop:sync-meta', {writes, archives}),
   storage: {
     getItem: key => request('get', key),
     setItem: (key, value) => request('set', key, String(value)),

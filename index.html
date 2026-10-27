@@ -3859,8 +3859,8 @@ if(__exports != exports)module.exports = exports;return module.exports}));
   <button class="nav-button" data-page="settings">⚙　AI 设置</button>
   <div class="sidebar-bottom">
     给生活留一点秩序。<br>
-    数据自动保存在当前浏览器。<br>
-    云端同步待接入。
+    <span id="storage-location">数据自动保存在当前浏览器。</span><br>
+    <span id="workspace-sync-summary">云端同步未启用。</span>
   </div>
 </aside>
 
@@ -4631,7 +4631,24 @@ if(__exports != exports)module.exports = exports;return module.exports}));
     </div>
   </header>
 
-  <section class="panel settings-layout" style="margin-bottom:16px"><div class="panel-body"><h2>云端同步接入测试</h2><p class="muted">数据库已准备。先用独立测试页验证个人账号和两台设备互通；当前工作台数据仍保存在本地，尚未启用正式同步。</p><a href="cloudbase-test.html" target="_blank" rel="noopener noreferrer">打开登录与跨设备同步测试 ↗</a></div></section>
+  <section id="workspace-sync-panel" class="panel settings-layout hidden" style="margin-bottom:16px"><div class="panel-body">
+    <h2>云端同步 <small>桌面版 0.2.0</small></h2>
+    <p>本机 SQLite 优先保存，登录后每 15 秒检查更新。两台电脑使用同一应用账号。AI 密钥、天气缓存和本次 AI 对话不上传。</p>
+    <p class="muted">环境：emotional-newt-d5gg8duqi1ab13685 · 上海。请在 CloudBase 的 HTTP 网关 → 跨域设置中添加 <strong>localhost:17383</strong>，不加路径；若要求完整来源则填写 http://localhost:17383。</p>
+    <form id="workspace-sync-login" class="form-grid">
+      <label class="span-2">客户端 Publishable Key<input id="workspace-sync-key" type="password" autocomplete="off" required></label>
+      <label>应用用户名<input id="workspace-sync-username" autocomplete="username" required></label>
+      <label>应用密码<input id="workspace-sync-password" type="password" autocomplete="current-password" required></label>
+      <label class="check-label span-2"><input id="workspace-sync-consent" type="checkbox" required>我确认将此设备的现有业务记录同步到这个个人账号。若双方都有内容，先处理冲突。</label>
+      <button id="workspace-sync-login-button" type="submit">登录并启用同步</button>
+    </form>
+    <p id="workspace-sync-user" class="muted"></p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button id="workspace-sync-now" type="button" disabled>立即同步</button><button id="workspace-sync-logout" type="button" disabled>退出并停止同步</button></div>
+    <p id="workspace-sync-status" role="status" aria-live="polite">未启用；记录仍保存在本机。</p>
+    <p class="muted">冲突按整个模块处理，选择前会保留本地恢复副本。退出不会删除本机记录；为避免混用，此数据库首次绑定后只能同步同一账号。请先用测试记录验证。</p>
+    <div id="workspace-sync-conflicts"></div>
+  </div></section>
+  <section class="panel settings-layout" style="margin-bottom:16px"><div class="panel-body"><h2>独立连接测试</h2><p class="muted">此测试页只读写测试记录，不同步正式业务数据。</p><a href="cloudbase-test.html" target="_blank" rel="noopener noreferrer">打开连接测试 ↗</a></div></section>
   <section class="panel settings-layout">
     <div class="panel-heading">
       <h2>连接配置</h2>
@@ -12232,7 +12249,35 @@ setInterval(()=>{
   if(currentPage==="home")renderHome();
   if(currentPage==="morning")renderMorning();
 },30000);
+
+if(window.qijianDesktop){
+  const syncEmpty={
+    "qijian-memos-v1":[],"qijian-lockers-v1":{cabinets:[],items:[],logs:[]},
+    "qijian-morning-v1":{entries:[],ackDates:[]},"qijian-status-v1":{entries:[]},
+    "qijian-medicine-v1":{items:[],logs:[],illness:{active:false,name:"",plan:""}},
+    "qijian-travel-v1":{visits:[]}
+  };
+  const names=["备忘录","储物柜","晨起提醒","每日记录","药箱","游玩人生"];
+  window.qijianSyncWorkspace={
+    specs:[...STORES.map((s,i)=>({key:s.key,label:names[i],empty:syncEmpty[s.key],valid:value=>s.validate(value)})),
+      {key:"desktop:notebook",label:"笔记",empty:{folders:[],notes:[]},valid:validNotes}],
+    ready:()=>notesReady&&!notesFailed&&STORES.every(s=>s.ok),
+    canApply:()=>!dailyDirty&&!aiBusy&&saveRevision===savedRevision&&!document.querySelector('dialog[open]')&&
+      (!document.activeElement?.matches('input,textarea,select,[contenteditable="true"]')||!!document.activeElement.closest('#workspace-sync-panel')),
+    applied:key=>{
+      if(key==="desktop:notebook"){
+        notesState=JSON.parse(workspaceStorage.getItem(key));
+        if(!notesState.folders.some(f=>f.id===activeFolder))activeFolder="all";
+        renderFolders();renderDocuments();openNote(activeNoteId);renderDailyResearch();renderHome();
+      }else window.dispatchEvent(new StorageEvent("storage",{key}));
+    }
+  };
+  $("#storage-location").textContent="数据保存在本机 SQLite。";
+}
 </script>
+<script src="assets/cloudbase-auth-3.10.4.js"></script>
+<script src="assets/workspace-sync-core.js"></script>
+<script src="assets/workspace-sync.js"></script>
 </body>
 </html>
   

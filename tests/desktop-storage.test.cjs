@@ -25,3 +25,17 @@ test('records and notebook survive restart; deletion persists; SQL-like keys sta
     store.close();
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+test('sync checkpoints and incoming records commit atomically, failed batch rolls back', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'qijian-atomic-'));
+  try {
+    const store = openStorage(path.join(dir, 'workspace.sqlite'));
+    store.set('qijian-memos-v1', 'old');
+    store.batch([{key:'qijian-memos-v1',value:'new'},{key:'desktop:sync-meta',value:'checkpoint'}],[{key:'qijian-memos-v1',value:'old',reason:'remote-apply'}]);
+    assert.equal(store.get('qijian-memos-v1'), 'new');
+    assert.equal(store.get('desktop:sync-meta'), 'checkpoint');
+    assert.throws(()=>store.batch([{key:'qijian-memos-v1',value:'bad'},{key:'desktop:sync-meta',value:null}]));
+    assert.equal(store.get('qijian-memos-v1'), 'new');
+    assert.equal(store.get('desktop:sync-meta'), 'checkpoint');
+    store.close();
+  } finally { rmSync(dir, { recursive:true, force:true }); }
+});
