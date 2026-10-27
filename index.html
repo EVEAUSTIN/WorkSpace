@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>栖间 · 个人工作台</title>
+<style>
+:root {
+  --bg: #f5f6f0;
+  --green: #326c59;
+  --ink: #293e36;
+  --muted: #819087;
+  --line: #e7eae2;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.7 system-ui, "Microsoft YaHei", sans-serif;
+}
+button, input, select, textarea { font: inherit; }
+button {
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 9px 13px;
+  background: white;
+  color: inherit;
+}
+button:hover { background: #edf2e9; }
+button.primary { background: var(--green); color: white; }
+button.primary:hover { background: #254f42; }
+:focus-visible { outline: 3px solid #a5c9b5; outline-offset: 2px; }
+input, select, textarea {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 9px 12px;
+  background: white;
+  color: inherit;
+  min-width: 0;
+}
+aside {
+  position: fixed;
+  width: 210px;
+  height: 100vh;
+  padding: 30px 24px;
+  background: white;
+  border-right: 1px solid var(--line);
+}
+.brand { font-size: 25px; font-weight: 750; letter-spacing: 3px; }
+.brand span { color: var(--green); }
+.brand-sub { color: var(--muted); font-size: 10px; letter-spacing: 1px; }
+.nav {
+  margin-top: 40px;
+  padding: 12px;
+  border-radius: 9px;
+  background: #eaf1e8;
+  color: var(--green);
+}
+.slogan {
+  position: absolute;
+  bottom: 30px;
+  color: var(--muted);
+  font-size: 12px;
+}
+main {
+  margin-left: 210px;
+  padding: 35px 42px;
+  max-width: 1550px;
+}
+header, .heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+h1 { font-size: 30px; margin: 3px 0; }
+h2 { font-size: 17px; margin: 0; }
+p { color: var(--muted); margin: 6px 0 16px; }
+small { color: var(--muted); font-size: 12px; }
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin: 28px 0 22px;
+}
+.stats article {
+  padding: 17px 23px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--muted);
+}
+.stats b {
+  display: block;
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--green);
+}
+.stats article:nth-child(2) b { color: #af8b4c; }
+.alert {
+  margin-bottom: 23px;
+  padding: 15px 20px;
+  background: #fbf4e6;
+  border: 1px solid #eadabd;
+  border-radius: 12px;
+  color: #906a35;
+  overflow-wrap: anywhere;
+}
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 23px;
+}
+.panel {
+  overflow: hidden;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+}
+.heading { padding: 20px; border-bottom: 1px solid var(--line); }
+#search { width: 180px; }
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 14px 20px;
+}
+.filters button { padding: 6px 10px; border: 0; font-size: 13px; }
+.filters .active { background: #eaf1e8; color: var(--green); }
+.task {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 19px 20px;
+  border-top: 1px solid #eff1eb;
+}
+.task input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  margin-top: 6px;
+  accent-color: var(--green);
+}
+.content { flex: 1; min-width: 0; }
+.title { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+.completed .title { text-decoration: line-through; color: var(--muted); }
+.notes {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.meta { margin-top: 8px; color: var(--muted); font-size: 12px; }
+.overdue { color: #b35f49; }
+.badge {
+  display: inline-block;
+  padding: 2px 7px;
+  margin-right: 8px;
+  border-radius: 5px;
+  background: #edf3e9;
+}
+.badge.high { background: #f9e8df; color: #ab674e; }
+.tools { display: flex; gap: 3px; }
+.tools button {
+  padding: 3px 6px;
+  border: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.empty { padding: 60px 20px; color: var(--muted); text-align: center; }
+.calendar { padding: 18px; }
+.calendar .heading { padding: 0 0 15px; border: 0; }
+.calendar button { padding: 5px 10px; border: 0; }
+#calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  text-align: center;
+}
+.weekday { color: var(--muted); font-size: 11px; }
+.day { position: relative; min-height: 37px; font-size: 12px; }
+.day.today { background: #eef3e9; font-weight: bold; }
+.day.selected { background: var(--green); color: white; }
+.day.has::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  left: calc(50% - 2px);
+  width: 4px;
+  height: 4px;
+  background: #c49b55;
+  border-radius: 50%;
+}
+footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 23px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.calendar footer { padding-top: 12px; border-top: 1px solid var(--line); }
+.calendar footer button { padding: 0; font-size: 11px; }
+.backup { margin-top: 20px; padding: 22px; }
+.backup p { margin-top: 12px; font-size: 12px; }
+dialog {
+  width: min(460px, 94vw);
+  max-height: 90vh;
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  color: var(--ink);
+}
+dialog::backdrop { background: #20372f77; backdrop-filter: blur(3px); }
+form { display: grid; gap: 12px; }
+label { display: grid; gap: 4px; font-size: 13px; }
+.actions { display: flex; justify-content: flex-end; gap: 10px; }
+#toast:not(:empty) {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 90vw;
+  padding: 12px 22px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: white;
+  z-index: 10;
+}
+@media (max-width: 1100px) {
+  aside { width: 160px; padding: 25px 15px; }
+  main { margin-left: 160px; padding: 25px; }
+  .layout { grid-template-columns: minmax(0, 1fr) 280px; }
+}
+@media (max-width: 850px) {
+  aside {
+    position: static;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: auto;
+    padding: 12px 22px;
+  }
+  .brand-sub, .slogan { display: none; }
+  .nav { margin: 0; }
+  main { margin: 0; padding: 22px 15px; }
+  .layout { grid-template-columns: 1fr; }
+  .stats { gap: 8px; }
+  .stats article { padding: 14px; }
+  .heading { flex-wrap: wrap; }
+  .tools { flex-direction: column; }
+  header { align-items: flex-start; }
+  h1 { font-size: 25px; }
+  .primary { white-space: nowrap; }
+}
+</style>
+</head>
+
+<body>
+<aside>
+  <div>
+    <div class="brand"><span>◒</span> 栖间</div>
+    <div class="brand-sub">YOUR PERSONAL SPACE</div>
+  </div>
+  <div class="nav">▤　备忘录</div>
+  <div class="slogan">给忙碌留一点秩序。<br>把重要的事，放在心上。</div>
+</aside>
+
+<main>
+  <header>
+    <div>
+      <small id="date"></small>
+      <h1>我的备忘录</h1>
+      <p>整理思绪，让每一件事有着落。</p>
+    </div>
+    <button class="primary" id="add">＋ 新建事件</button>
+  </header>
+
+  <section class="stats" aria-label="事件统计">
+    <article>待办事件<b id="pending">0</b></article>
+    <article>24 小时内到期<b id="soon">0</b></article>
+    <article>已完成<b id="done">0</b></article>
+  </section>
+
+  <section class="alert" id="alert" aria-live="polite"></section>
+
+  <div class="layout">
+    <section class="panel">
+      <div class="heading">
+        <h2 id="listTitle">事件清单</h2>
+        <input id="search" type="search"
+          placeholder="搜索事件或备注" aria-label="搜索事件或备注">
+      </div>
+      <nav class="filters" id="filters" aria-label="筛选事件">
+        <button data-filter="pending" class="active">待办</button>
+        <button data-filter="all">全部</button>
+        <button data-filter="today">今天到期</button>
+        <button data-filter="overdue">已逾期</button>
+        <button data-filter="done">已完成</button>
+      </nav>
+      <div id="tasks"></div>
+    </section>
+
+    <div>
+      <section class="panel calendar">
+        <div class="heading">
+          <h2 id="month"></h2>
+          <div>
+            <button id="prev" aria-label="上个月">‹</button>
+            <button id="next" aria-label="下个月">›</button>
+          </div>
+        </div>
+        <div id="calendar"></div>
+        <footer>
+          <span>• 圆点表示当天有待办</span>
+          <button id="clear">全部日期</button>
+        </footer>
+      </section>
+
+      <section class="panel backup">
+        <h2>随时备份，安心记录</h2>
+        <p>
+          数据保存在当前浏览器。导出 JSON 后可在另一台设备导入。
+          相同事件保留本机版本。自动云盘同步尚未接入。
+        </p>
+        <button id="export">↓ 导出备份</button>
+        <button id="import">↑ 导入备份</button>
+        <p><button id="notify">开启浏览器通知</button></p>
+        <small id="storage">
+          页面打开时检查提醒；关闭后不提醒。请定期导出备份。
+        </small>
+      </section>
+    </div>
+  </div>
+
+  <footer>
+    <span>栖间 · 为你的每一天留白</span>
+    <span>本地保存 · 无需登录</span>
+  </footer>
+</main>
+
+<dialog id="editor">
+  <form id="form">
+    <h2 id="formTitle">新建事件</h2>
+
+    <label>
+      事件名称
+      <input name="title" required maxlength="120"
+        placeholder="想要记住什么？">
+    </label>
+
+    <label>
+      截止日期和时间
+      <input name="deadline" type="datetime-local" required>
+    </label>
+
+    <label>
+      优先级
+      <select name="priority">
+        <option value="normal">普通</option>
+        <option value="high">重要</option>
+        <option value="low">低</option>
+      </select>
+    </label>
+
+    <label>
+      提前提醒
+      <select name="remind">
+        <option value="15">15 分钟</option>
+        <option value="60">1 小时</option>
+        <option value="1440" selected>1 天</option>
+        <option value="4320">3 天</option>
+      </select>
+    </label>
+
+    <label>
+      备注
+      <textarea name="notes" maxlength="2000" rows="3"
+        placeholder="补充细节、准备事项……"></textarea>
+    </label>
+
+    <div class="actions">
+      <button type="button" id="cancel">取消</button>
+      <button type="submit" class="primary">保存事件</button>
+    </div>
+  </form>
+</dialog>
+
+<input type="file" id="file" accept=".json,application/json" hidden>
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+
+const $ = selector => document.querySelector(selector);
+const KEY = "qijian-memos-v1";
+
+let tasks = [];
+let filter = "pending";
+let selected = "";
+let month = new Date();
+let editing = null;
+let toastTimer;
+let storageReadable = true;
+
+const notified = new Set();
+
+function day(date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0")
+  ].join("-");
+}
+
+function localTime(date) {
+  return day(date) + "T" +
+    String(date.getHours()).padStart(2, "0") + ":" +
+    String(date.getMinutes()).padStart(2, "0");
+}
+
+function escapeHTML(value) {
+  const entities = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  };
+  return String(value).replace(/[&<>"']/g, char => entities[char]);
+}
+
+function validDeadline(value) {
+  if (typeof value !== "string" ||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) {
+    return false;
+  }
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) && localTime(date) === value;
+}
+
+function validTask(task) {
+  return task &&
+    typeof task.id === "string" &&
+    task.id.length > 0 &&
+    task.id.length <= 100 &&
+    typeof task.title === "string" &&
+    task.title.trim().length > 0 &&
+    task.title.length <= 120 &&
+    validDeadline(task.deadline) &&
+    ["normal", "high", "low"].includes(task.priority) &&
+    [15, 60, 1440, 4320].includes(task.remind) &&
+    typeof task.done === "boolean" &&
+    typeof task.notes === "string" &&
+    task.notes.length <= 2000;
+}
+
+function validTaskList(list) {
+  return Array.isArray(list) &&
+    list.every(validTask) &&
+    new Set(list.map(task => task.id)).size === list.length;
+}
+
+function toast(message) {
+  $("#toast").textContent = message;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    $("#toast").textContent = "";
+  }, 5000);
+}
+
+try {
+  const saved = JSON.parse(localStorage.getItem(KEY) || "[]");
+  if (!validTaskList(saved)) throw new Error("Invalid saved data");
+  tasks = saved;
+} catch {
+  storageReadable = false;
+  $("#storage").textContent =
+    "本地数据读取异常，已停止写入以保护原数据。请检查浏览器设置或备份。";
+  toast("本地数据无法读取，暂时不能保存事件。");
+}
+
+function commit(next) {
+  if (!storageReadable) {
+    toast("本地存储读取异常，已停止写入，请先检查浏览器设置或原始备份。");
+    return false;
+  }
+
+  try {
+    localStorage.setItem(KEY, JSON.stringify(next));
+    tasks = next;
+    render();
+    return true;
+  } catch {
+    toast("保存失败：空间不足或浏览器禁用了本地存储。请导出备份。");
+    return false;
+  }
+}
+
+function checkNotifications(due, now) {
+  if (!("Notification" in window) ||
+      Notification.permission !== "granted") {
+    return;
+  }
+
+  for (const task of due) {
+    const signature = [
+      task.id, task.deadline, task.remind
+    ].join("|");
+
+    if (notified.has(signature)) continue;
+
+    try {
+      new Notification(
+        new Date(task.deadline) < now
+          ? "备忘事件已逾期"
+          : "备忘事件即将到期",
+        {
+          body: task.title + " · " + task.deadline.replace("T", " "),
+          tag: task.id
+        }
+      );
+      notified.add(signature);
+    } catch {
+      // 某些浏览器不支持直接创建通知，主界面提醒仍然有效。
+    }
+  }
+}
+
+function renderCalendar(pending, today) {
+  $("#month").textContent =
+    month.getFullYear() + " 年 " + (month.getMonth() + 1) + " 月";
+
+  const year = month.getFullYear();
+  const currentMonth = month.getMonth();
+  const first = new Date(year, currentMonth, 1);
+  const count = new Date(year, currentMonth + 1, 0).getDate();
+
+  let html = ["一", "二", "三", "四", "五", "六", "日"]
+    .map(name => '<span class="weekday">' + name + "</span>")
+    .join("");
+
+  html += "<span></span>".repeat((first.getDay() + 6) % 7);
+
+  for (let number = 1; number <= count; number++) {
+    const date = day(new Date(year, currentMonth, number));
+    const hasTasks = pending.some(task => task.deadline.startsWith(date));
+
+    const classes = [
+      "day",
+      date === today ? "today" : "",
+      date === selected ? "selected" : "",
+      hasTasks ? "has" : ""
+    ].filter(Boolean).join(" ");
+
+    html += `
+      <button
+        class="${classes}"
+        data-day="${date}"
+        aria-label="${date}${hasTasks ? " 有待办" : ""}"
+        aria-pressed="${date === selected}">
+        ${number}
+      </button>
+    `;
+  }
+
+  $("#calendar").innerHTML = html;
+}
+
+function render() {
+  const now = new Date();
+  const today = day(now);
+  const pending = tasks.filter(task => !task.done);
+
+  const overdue = pending.filter(task =>
+    new Date(task.deadline) < now
+  );
+
+  const soon = pending.filter(task => {
+    const difference = new Date(task.deadline) - now;
+    return difference >= 0 && difference <= 86400000;
+  });
+
+  const due = pending.filter(task =>
+    new Date(task.deadline) - now <= task.remind * 60000
+  ).sort((a, b) => a.deadline.localeCompare(b.deadline));
+
+  $("#date").textContent = now.toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long"
+  });
+
+  $("#pending").textContent = pending.length;
+  $("#soon").textContent = soon.length;
+  $("#done").textContent = tasks.length - pending.length;
+
+  if (due.length) {
+    const summary = [
+      overdue.length + " 件已逾期",
+      (due.length - overdue.length) + " 件进入提醒时间"
+    ].join(" · ");
+
+    $("#alert").textContent =
+      "◷ " + summary + "：" +
+      due.slice(0, 3).map(task => task.title).join("、") +
+      (due.length > 3 ? "……" : "");
+  } else {
+    $("#alert").textContent = "◷ 暂无临期事件，今天也从容一点。";
+  }
+
+  $("#listTitle").textContent =
+    selected ? selected + " 的事件" : "事件清单";
+
+  const query = $("#search").value.trim().toLowerCase();
+
+  const visible = tasks.filter(task => {
+    const matchesDate =
+      !selected || task.deadline.slice(0, 10) === selected;
+
+    const matchesSearch =
+      (task.title + " " + task.notes).toLowerCase().includes(query);
+
+    let matchesFilter = false;
+
+    switch (filter) {
+      case "all":
+        matchesFilter = true;
+        break;
+      case "pending":
+        matchesFilter = !task.done;
+        break;
+      case "done":
+        matchesFilter = task.done;
+        break;
+      case "today":
+        matchesFilter = !task.done &&
+          task.deadline.slice(0, 10) === today;
+        break;
+      case "overdue":
+        matchesFilter = !task.done &&
+          new Date(task.deadline) < now;
+        break;
+    }
+
+    return matchesDate && matchesSearch && matchesFilter;
+  }).sort((a, b) =>
+    Number(a.done) - Number(b.done) ||
+    a.deadline.localeCompare(b.deadline)
+  );
+
+  const priorityNames = {
+    high: "重要",
+    normal: "普通",
+    low: "低优先级"
+  };
+
+  $("#tasks").innerHTML = visible.length
+    ? visible.map(task => {
+        const isOverdue = !task.done && new Date(task.deadline) < now;
+        const id = escapeHTML(task.id);
+
+        return `
+          <article class="task ${task.done ? "completed" : ""}">
+            <input
+              type="checkbox"
+              aria-label="完成 ${escapeHTML(task.title)}"
+              data-toggle="${id}"
+              ${task.done ? "checked" : ""}>
+
+            <div class="content">
+              <div class="title">${escapeHTML(task.title)}</div>
+
+              ${task.notes
+                ? '<div class="notes">' + escapeHTML(task.notes) + "</div>"
+                : ""}
+
+              <div class="meta">
+                <span class="badge ${task.priority === "high" ? "high" : ""}">
+                  ${priorityNames[task.priority]}
+                </span>
+                <span class="${isOverdue ? "overdue" : ""}">
+                  ${escapeHTML(task.deadline.replace("T", " "))}
+                  ${isOverdue ? " · 已逾期" : ""}
+                </span>
+              </div>
+            </div>
+
+            <div class="tools">
+              <button data-edit="${id}">编辑</button>
+              <button data-delete="${id}">删除</button>
+            </div>
+          </article>
+        `;
+      }).join("")
+    : `
+      <div class="empty">
+        这里还没有事件<br>
+        <small>新建一件事，或调整筛选条件。</small>
+      </div>
+    `;
+
+  renderCalendar(pending, today);
+  checkNotifications(due, now);
+}
+
+function openEditor(task) {
+  editing = task ? task.id : null;
+
+  const form = $("#form");
+  form.reset();
+  $("#formTitle").textContent = task ? "编辑事件" : "新建事件";
+
+  if (task) {
+    for (const key of [
+      "title", "deadline", "priority", "remind", "notes"
+    ]) {
+      form.elements[key].value = task[key];
+    }
+  } else {
+    form.elements.deadline.value =
+      localTime(new Date(Date.now() + 3600000));
+  }
+
+  $("#editor").showModal();
+}
+
+$("#add").onclick = () => openEditor();
+$("#cancel").onclick = () => $("#editor").close();
+
+$("#form").onsubmit = event => {
+  event.preventDefault();
+
+  const data = new FormData(event.target);
+  const existing = tasks.find(task => task.id === editing);
+
+  const task = {
+    id: editing || (
+      globalThis.crypto && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : Date.now() + "-" + Math.random().toString(36).slice(2)
+    ),
+    title: data.get("title").trim(),
+    deadline: data.get("deadline"),
+    priority: data.get("priority"),
+    remind: Number(data.get("remind")),
+    notes: data.get("notes").trim(),
+    done: existing ? existing.done : false
+  };
+
+  if (!validTask(task)) {
+    toast("请填写有效的标题和日期。");
+    return;
+  }
+
+  const next = editing
+    ? tasks.map(item => item.id === editing ? task : item)
+    : [...tasks, task];
+
+  if (commit(next)) {
+    $("#editor").close();
+    toast("事件已保存");
+  }
+};
+
+$("#tasks").onclick = event => {
+  const element = event.target.closest("[data-toggle], [data-edit], [data-delete]");
+  if (!element) return;
+
+  const id =
+    element.dataset.toggle ||
+    element.dataset.edit ||
+    element.dataset.delete;
+
+  const task = tasks.find(item => item.id === id);
+  if (!task) return;
+
+  if (element.dataset.toggle) {
+    if (!commit(tasks.map(item =>
+      item.id === id ? { ...item, done: element.checked } : item
+    ))) {
+      element.checked = task.done;
+    }
+  }
+
+  if (element.dataset.edit) openEditor(task);
+
+  if (element.dataset.delete &&
+      confirm("删除“" + task.title + "”？")) {
+    commit(tasks.filter(item => item.id !== id));
+  }
+};
+
+$("#filters").onclick = event => {
+  const button = event.target.closest("[data-filter]");
+  if (!button) return;
+
+  filter = button.dataset.filter;
+
+  $("#filters").querySelectorAll("button").forEach(item => {
+    item.classList.toggle("active", item === button);
+  });
+
+  render();
+};
+
+$("#search").oninput = render;
+
+$("#calendar").onclick = event => {
+  const button = event.target.closest("[data-day]");
+  if (!button) return;
+  selected = selected === button.dataset.day ? "" : button.dataset.day;
+  render();
+};
+
+$("#clear").onclick = () => {
+  selected = "";
+  render();
+};
+
+$("#prev").onclick = () => {
+  month = new Date(month.getFullYear(), month.getMonth() - 1, 1);
+  render();
+};
+
+$("#next").onclick = () => {
+  month = new Date(month.getFullYear(), month.getMonth() + 1, 1);
+  render();
+};
+
+function downloadJSON(data, name) {
+  const blob = new Blob(
+    [JSON.stringify(data, null, 2)],
+    { type: "application/json" }
+  );
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+
+  anchor.href = url;
+  anchor.download = name;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+$("#export").onclick = () => {
+  if (!storageReadable) {
+    toast("本地数据读取异常，不能将当前空列表作为正常备份导出。");
+    return;
+  }
+
+  downloadJSON(
+    { version: 1, tasks },
+    "栖间备忘录-" + day(new Date()) + ".json"
+  );
+};
+
+$("#import").onclick = () => $("#file").click();
+
+$("#file").onchange = async event => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  try {
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error("File too large");
+    }
+
+    const data = JSON.parse(await file.text());
+
+    if (!data ||
+        data.version !== 1 ||
+        !validTaskList(data.tasks)) {
+      throw new Error("Invalid backup");
+    }
+
+    const merged = new Map(tasks.map(task => [task.id, task]));
+    let added = 0;
+
+    for (const task of data.tasks) {
+      if (merged.has(task.id)) continue;
+
+      // 仅接收已定义字段。
+      merged.set(task.id, {
+        id: task.id,
+        title: task.title,
+        deadline: task.deadline,
+        priority: task.priority,
+        remind: task.remind,
+        notes: task.notes,
+        done: task.done
+      });
+      added++;
+    }
+
+    if (commit([...merged.values()])) {
+      toast(
+        "导入完成：新增 " + added +
+        " 件；相同 ID 保留本机版本。"
+      );
+    }
+  } catch {
+    toast("导入失败：请选择有效的栖间 JSON 备份，不超过 5 MB。");
+  } finally {
+    event.target.value = "";
+  }
+};
+
+$("#notify").onclick = async () => {
+  if (!("Notification" in window)) {
+    toast("当前浏览器不支持通知，主界面仍会提醒。");
+    return;
+  }
+
+  try {
+    const permission = await Notification.requestPermission();
+
+    if (permission === "granted") {
+      toast("通知已开启；需要保持页面打开。");
+      notified.clear();
+      render();
+    } else {
+      toast("未获得通知权限，主界面仍会提醒。");
+    }
+  } catch {
+    toast("通知不可用，请通过 localhost 或 HTTPS 打开。");
+  }
+};
+
+// 多个同源标签页之间更新显示。
+window.addEventListener("storage", event => {
+  if (event.key !== KEY && event.key !== null) return;
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || "[]");
+    if (!validTaskList(saved)) throw new Error("Invalid data");
+
+    tasks = saved;
+    storageReadable = true;
+    $("#storage").textContent =
+      "页面打开时检查提醒；关闭后不提醒。请定期导出备份。";
+    render();
+  } catch {
+    storageReadable = false;
+    $("#storage").textContent =
+      "本地数据读取异常，已停止写入以保护原数据。";
+    toast("其他标签页的数据无法读取，请检查备份。");
+  }
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) render();
+});
+
+render();
+setInterval(render, 30000);
+</script>
+</body>
+</html>
