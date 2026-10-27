@@ -16,6 +16,50 @@
     return message;
   }
   function failure(message,code){const e=new Error(message);e.safeMessage=message;e.code=code;return e;}
+  const PROBE_VERSION='2026-10-27.2';
+  function redactDiagnostic(value){
+    let text=String(value??'');
+    const variants=[...secrets].filter(Boolean).flatMap(secret=>[secret,JSON.stringify(secret).slice(1,-1),encodeURIComponent(secret)]).sort((a,b)=>b.length-a.length);
+    for(const secret of variants)text=text.split(secret).join('[已隐藏]');
+    text=text.replace(/\b[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{8,}\b/g,'[已隐藏令牌]');
+    text=text.replace(/((?:authorization|access[_-]?token|refresh[_-]?token|publishable[_-]?key|access[_-]?key|api[_-]?key|password|secret[_-]?key|client[_-]?secret)\s*["']?\s*[:=]\s*)(?:"[^"\r\n]*"|'[^'\r\n]*'|[^\s,;}]+)/gi,'$1[已隐藏]');
+    text=text.replace(/https?:\/\/[^\s<>"']+/gi,raw=>{try{const u=new URL(raw);return u.origin+u.pathname+(u.search?'?[查询参数已隐藏]':'');}catch{return '[链接已隐藏]';}});
+    return text.slice(0,900);
+  }
+  function showDiagnostic(stage,error=null){
+    const details=[`连接测试版本：${PROBE_VERSION}`,`发生阶段：${stage}`,`网站来源：${location.origin}`,`环境：${ENV}`,`认证请求：https://${ENV}.api.tcloudbasegateway.com/auth/v1/signin`];
+    if(error){
+      for(const [label,key] of [['错误类型','name'],['SDK 分类','category'],['SDK 错误码','code'],['认证状态','status'],['业务错误码','errorCode'],['请求 ID','requestId']]){
+        const value=error[key];if(typeof value==='string'||typeof value==='number')details.push(label+'：'+redactDiagnostic(value));
+      }
+      const message=error.safeMessage||error.message||error.error_description;
+      if(message)details.push('服务提示（已脱敏）：'+redactDiagnostic(message));
+    }
+    $('#cloud-copy-result').textContent='';
+    $('#cloud-diagnostic-text').textContent=details.join('\n');
+    $('#cloud-diagnostics').open=!!error;
+  }
+  function authFailureHint(error,stage){
+    const message=redactDiagnostic(error?.message||error?.error_description||'');
+    const code=redactDiagnostic(error?.code||error?.status||'');
+    const category=String(error?.category||'');
+    if(/origin|domain|referer|referrer|安全域名|安全来源|白名单|allowlist|whitelist|cors/i.test(message+' '+code)){
+      return 'CloudBase 或浏览器提示了访问来源限制。请在该环境的 Web 安全域名 / 允许来源中添加 '+location.hostname+'；若要求完整 Origin，填写 '+location.origin+'，不带页面路径。保存后刷新再登录。';
+    }
+    if(/access.?key|api.?key|publishable|signature|签名|密钥/i.test(message+' '+code)){
+      return '认证服务提示客户端密钥或签名问题。请确认复制的是当前环境的客户端 Publishable Key，且没有复制成服务端 API Key；暂时不要重置密码。';
+    }
+    if(category==='PROVIDER_NOT_ENABLED')return '认证服务提示用户名密码登录方式未启用。请确认是在当前环境启用，并检查账号是否属于这个环境。';
+    if(category==='CAPTCHA_REQUIRED'||category==='CAPTCHA_INVALID')return '认证服务要求人机验证或验证码未通过。请完成官方验证；若未弹出验证界面，提供下面的脱敏诊断信息，不要关闭安全校验。';
+    if(category==='RATE_LIMITED')return '认证请求受到频率限制，请稍后再试，避免连续重复点击。';
+    if(category==='USER_NOT_FOUND')return '认证服务没有找到这个应用账号。请核对当前环境中的应用用户名，不是腾讯云控制台登录账号。';
+    if(category==='USER_STATUS_ABNORMAL')return '认证服务提示账号状态异常。请在身份认证的用户管理中检查账号状态。';
+    if(category==='INVALID_CREDENTIALS')return '认证服务返回了凭据验证失败，但仅凭这个分类不能确认一定是密码错误。请结合下方服务提示核对账号所属环境、客户端密钥及登录配置。';
+    if(/failed to fetch|networkerror|load failed|network request failed|ERR_NETWORK|请求超时/i.test(message+' '+code)||(error?.name==='TypeError'||category==='SERVICE_ERROR')&&/\bfetch\b|\bnetwork\b|\bload\b|连接|timeout/i.test(message))return '浏览器未能完成认证网络请求。请先核对 Web 安全域名和网络；不要重复更换密码。下方为脱敏诊断。';
+    if(error?.safeMessage)return safeMessage(error);
+    return stage+'未完成，具体原因见下方脱敏诊断。当前尚不能判断是域名、认证配置还是页面运行错误，请先保留现有账号和密钥。';
+  }
+
   function renderControls(){
     const logged=!!state.user,ready=logged&&!state.busy&&!state.blocked;
     $('#cloud-login').disabled=state.busy||logged;
@@ -89,7 +133,7 @@
       check('read','读取成功','pass');
       if(changed)status('云端已有不同版本。你的未保存输入已保留；直接保存会校验旧版本，不会静默覆盖其他设备。可点击“用云端内容替换输入”。','warning');
       else if(!silent)status(row?'已读取云端测试记录。':'读取成功；这个账号尚无测试记录。现在可保存第一条测试内容。','success');
-    }catch(error){if(epoch!==state.epoch)return;check('read','读取失败','fail');status(safeMessage(error)+(state.remote?' 下方仍为上次成功读取的结果。':''),'error');}
+    }catch(error){if(epoch!==state.epoch)return;check('read','读取失败','fail');showDiagnostic('读取测试记录',error);status(safeMessage(error)+(state.remote?' 下方仍为上次成功读取的结果。':''),'error');}
     finally{if(epoch===state.epoch)setBusy(false);}
   }
   async function writeRemote(remove=false){
@@ -105,13 +149,13 @@
       if(row.version!==expected){state.blocked=true;throw failure('服务器版本号未按预期递增，已暂停写入。请检查 qijian_records_stamp 触发器。','SCHEMA');}
       state.base=row;state.remote=row;state.dirty=false;$('#cloud-message').value=row.deleted?'':row.payload.message;displayRecord(row);
       check('write',remove?'测试记录已清理':'写入成功','pass');status(remove?'测试记录已标记为删除，其他设备读取后会看到清理结果。':'测试内容已保存到云端。请在第二台设备用同一账号打开本页验证。','success');
-    }catch(error){if(epoch!==state.epoch)return;check('write','未确认写入','fail');status(safeMessage(error),'error');}
+    }catch(error){if(epoch!==state.epoch)return;check('write','未确认写入','fail');showDiagnostic('保存测试记录',error);status(safeMessage(error),'error');}
     finally{if(epoch===state.epoch)setBusy(false);}
   }
   function resetLocal(){
     state.epoch++;clearInterval(state.timer);state.timer=null;for(const c of state.requests)c.abort();state.requests.clear();
     state.user=null;state.base=null;state.remote=null;state.readDone=false;state.dirty=false;state.blocked=false;state.busy=false;state.auth=null;state.app=null;state.key='';
-    secrets.clear();$('#cloud-password').value='';$('#cloud-message').value='';$('#cloud-user').textContent='';$('#cloud-preview').textContent='已退出本页登录。';$('#cloud-record-meta').textContent='';
+    secrets.clear();showDiagnostic('已退出测试会话');$('#cloud-password').value='';$('#cloud-message').value='';$('#cloud-user').textContent='';$('#cloud-preview').textContent='已退出本页登录。';$('#cloud-record-meta').textContent='';
     for(const name of ['login','read','write','anon'])check(name,'尚未验证');renderControls();
   }
   async function logout(clearConfig=false){
@@ -128,11 +172,15 @@
     if(!window.QijianCloudbase){status('官方 SDK 未加载。部署时请一并上传 assets 目录，检查文件请求是否成功。','error');return;}
     const key=$('#cloud-publishable').value.replace(/\s+/g,''),username=$('#cloud-username').value.trim(),password=$('#cloud-password').value;
     if(!key||!username||!password)return;
-    const epoch=++state.epoch;secrets.add(key);secrets.add(password);setBusy(true);status('正在使用你的应用账号登录…');
+    const epoch=++state.epoch;let stage='初始化 SDK';secrets.add(key);secrets.add(password);showDiagnostic(stage);setBusy(true);status('正在使用你的应用账号登录…');
     try{
       state.key=key;state.app=window.QijianCloudbase.init({env:ENV,region:'ap-shanghai',accessKey:key,persistence:'session',endPointMode:'GATEWAY'});
-      state.auth=state.app.auth({persistence:'session'});
+      state.auth=state.app.auth();
+      stage='用户名密码认证';showDiagnostic(stage);
       const result=await state.auth.signInWithPassword({username,password});if(result?.error)throw result.error;
+      if(result?.data?.session?.access_token)secrets.add(result.data.session.access_token);
+      if(result?.data?.session?.refresh_token)secrets.add(result.data.session.refresh_token);
+      stage='获取登录用户身份';showDiagnostic(stage);
       const verified=await state.auth.getUser();if(verified?.error)throw verified.error;
       const user=verified?.data?.user;
       if(!user||typeof user.id!=='string'||!user.id||user.is_anonymous)throw failure('没有获取到有效的个人账号身份，请核对登录方式。','IDENTITY');
@@ -140,9 +188,9 @@
       if(epoch!==state.epoch)return;state.user=user;
       try{sessionStorage.setItem(CONFIG_KEY,key);}catch{}
       $('#cloud-user').textContent='已登录：'+(user.user_metadata?.username||username)+' · 用户标识：'+user.id;
-      $('#cloud-password').value='';check('login','登录成功','pass');status('登录成功，正在检查测试记录读取…','success');
+      $('#cloud-password').value='';check('login','登录成功','pass');showDiagnostic('登录成功，准备读取测试记录');status('登录成功，正在检查测试记录读取…','success');
     }catch(error){
-      if(epoch!==state.epoch)return;check('login','登录未成功','fail');status(error.safeMessage?safeMessage(error):'登录未成功。请核对应用用户名、密码和客户端 Publishable Key；确认用户名密码登录已启用，并按 CloudBase 要求配置当前网站的安全域名。如提示人机验证，请按官方验证流程完成。','error');state.user=null;
+      if(epoch!==state.epoch)return;check('login','登录未成功','fail');showDiagnostic(stage,error);status(authFailureHint(error,stage),'error');state.user=null;
     }finally{if(epoch===state.epoch){$('#cloud-password').value='';secrets.delete(password);setBusy(false);}}
     if(state.user&&epoch===state.epoch){await readRemote();if(epoch!==state.epoch)return;state.timer=setInterval(()=>{if($('#cloud-auto').checked&&!document.hidden)readRemote(true);},10000);}
   };
@@ -160,5 +208,8 @@
   $('#cloud-origin').textContent='当前网站来源：'+location.origin+'（如需配置安全域名，请使用控制台要求的格式）';
   if(location.protocol==='file:')$('#file-warning').classList.remove('hidden');
   try{$('#cloud-publishable').value=sessionStorage.getItem(CONFIG_KEY)||'';}catch{}
+  $('#cloud-build').textContent='连接测试 '+PROBE_VERSION;
+  showDiagnostic('等待登录');
+  $('#cloud-copy-diagnostic').onclick=async()=>{try{await navigator.clipboard.writeText($('#cloud-diagnostic-text').textContent);$('#cloud-copy-result').textContent='已复制脱敏诊断，可直接发给我排查。';}catch{$('#cloud-copy-result').textContent='未能访问剪贴板，请手动选择并复制下方诊断文字。';}};
   check('sdk',window.QijianCloudbase?'已加载':'加载失败',window.QijianCloudbase?'pass':'fail');renderControls();
 })();

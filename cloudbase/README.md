@@ -43,7 +43,8 @@
 
 ## 诊断与限制
 
-- 登录失败：核对环境、客户端可发布密钥、应用账号和用户名密码登录开关；若控制台要求安全域名或人机验证，按官方要求处理。
+- 登录失败：查看页面底部的“脱敏诊断”，其中包含发生阶段、SDK 错误码、分类和服务提示，不包含完整凭据。可复制这些信息定位原因，不能把所有失败都归因为密码错误。
+- GitHub Pages 当前来源为 `https://eveaustin.github.io`。如需配置 Web 安全域名，域名字段填 `eveaustin.github.io`；要求完整 Origin 的字段填 `https://eveaustin.github.io`，均不带 `/WorkSpace` 页面路径。保存后刷新测试页。不要通过关闭 RLS 或启用匿名写入解决来源限制。
 - 401：检查会话与接口接受的凭证。
 - 403：检查表授权、RLS、`auth.uid()` 的用户标识映射，**不要关闭 RLS 排障**。
 - 404：检查 `public.qijian_records` 是否存在，以及是否部署了正确版本。
@@ -74,3 +75,5 @@ python tests/test_cloudbase_probe.py
 ```
 
 脚本自启本地静态服务器，并模拟账号鉴权与 PostgREST 响应，检查双设备交互、冲突、软删除与风险提示。它不使用真实用户名密码，也不能替代你在 CloudBase 环境上的实际验证。
+
+`python tests/test_cloudbase_auth.py` 会在 HTTP 边界模拟认证服务，实际执行打包 SDK 的密码登录、用户身份读取及 token 获取。它同时覆盖来源限制、认证失败、网络失败、前端异常和诊断脱敏；仍不代表真实 CloudBase 环境已验证。
