@@ -6,6 +6,12 @@ function request(operation, key, value) {
   return result.value;
 }
 contextBridge.exposeInMainWorld('qijianDesktop', {
+  update: action => ipcRenderer.invoke('qijian:update', action),
+  onUpdate: callback => {
+    const handler=(_event,state)=>callback(state);
+    ipcRenderer.on('qijian:update-state',handler);
+    return ()=>ipcRenderer.removeListener('qijian:update-state',handler);
+  },
   commit: (writes, archives = []) => request('batch', 'desktop:sync-meta', {writes, archives}),
   storage: {
     getItem: key => request('get', key),

@@ -1,0 +1,54 @@
+name: Build Windows installer
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - package.json
+      - package-lock.json
+      - .github/workflows/release-windows.yml
+permissions:
+  contents: write
+concurrency:
+  group: windows-release
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run test:desktop
+      - run: npm run dist:win -- --publish never
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qijian-windows-installer
+          path: |
+            dist/*.exe
+            dist/*.blockmap
+            dist/latest.yml
+          if-no-files-found: error
+      - name: Create draft release for review
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          version=$(node -p 'require("./package.json").version')
+          tag="v${version}"
+          if gh release view "$tag" > /dev/null 2>&1; then
+            draft=$(gh release view "$tag" --json isDraft --jq .isDraft)
+            if [ "$draft" != "true" ]; then
+              echo "This version is already published. Bump package.json before releasing."
+              exit 1
+            fi
+          else
+            gh release create "$tag" --draft --target "$GITHUB_SHA" --title "栖间工作台 ${version}" --notes "Windows 安装包。首次安装后，可在 AI 设置 → 应用更新中检查并安装后续版本。保留原有本地数据库与登录配置。"
+          fi
+          gh release upload "$tag" dist/*.exe dist/*.blockmap dist/latest.yml --clobber

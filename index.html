@@ -3872,6 +3872,9 @@ if(__exports != exports)module.exports = exports;return module.exports}));
     <div><h1>我的工作台</h1><span class="workspace-subtitle">把日子过得有迹可循。</span></div>
     <div class="workspace-datetime"><div id="home-clock"></div><div id="home-date"></div></div>
   </header>
+  <div id="home-morning"></div>
+  <section id="home-due-panel" class="panel hidden" style="margin-bottom:16px;border:2px solid #d49b48"><div class="panel-heading"><h2>◷ 临期与逾期事件</h2><button data-go="memo">查看全部</button></div><div id="home-events" style="max-height:360px;overflow:auto"></div></section>
+
   <section id="home-weather" class="weather-summary" aria-labelledby="home-weather-title">
     <div class="weather-card-top"><h2 id="home-weather-title">天气 · 北京</h2><button class="weather-link" data-go="weather">天气详情 <span aria-hidden="true">↗</span></button></div>
     <div id="home-weather-content"><div class="weather-loading">正在获取北京天气…</div></div>
@@ -3901,7 +3904,6 @@ if(__exports != exports)module.exports = exports;return module.exports}));
     <div class="chat-controls"><button type="button" data-chat-clear="home">清除所有记录</button></div>
   </section>
 
-  <div id="home-morning"></div>
 
   <section class="hero">
     <div>
@@ -3954,13 +3956,6 @@ if(__exports != exports)module.exports = exports;return module.exports}));
       <div id="home-tomorrow"></div>
     </section>
 
-    <section class="panel">
-      <div class="panel-heading">
-        <h2>◷ 近期日程</h2>
-        <button data-go="memo">查看全部</button>
-      </div>
-      <div id="home-events"></div>
-    </section>
 
     <section class="panel">
       <div class="panel-heading">
@@ -4551,7 +4546,8 @@ if(__exports != exports)module.exports = exports;return module.exports}));
     </div>
     <div class="row">
       <button id="new-cabinet">＋ 储物柜</button>
-      <button class="primary" id="new-item">＋ 物品</button>
+      <button class="primary" id="new-slot-items">按格记录/补货</button>
+      <button id="new-item">按物品记录/补货</button>
     </div>
   </header>
 
@@ -4584,7 +4580,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
       <select id="stock-filter">
         <option value="all">全部状态</option>
         <option value="normal">充足 ≥2</option>
-        <option value="urgent">告急 1</option>
+        <option value="urgent">告急（含手动）</option>
         <option value="empty">耗尽 0</option>
         <option value="unknown">若干</option>
       </select>
@@ -4606,7 +4602,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
     </div>
 
     <div class="inventory-help">
-      “若干”需先确认实际数量才能精确扣减。告急和耗尽自动进入首页购买提醒。
+      “若干”需先确认实际数量才能精确扣减。普通物品告急和耗尽自动进入首页购买提醒；“不会告急”的物品仅手动标记后提醒。
     </div>
   </section>
 
@@ -4631,8 +4627,9 @@ if(__exports != exports)module.exports = exports;return module.exports}));
     </div>
   </header>
 
+  <section id="desktop-update-panel" class="panel hidden" style="margin-bottom:16px"><div class="panel-body"><h2>应用更新</h2><p id="desktop-update-status" role="status">正在读取版本信息…</p><div class="row"><button id="desktop-update-check" type="button">检查更新</button><button id="desktop-update-install" type="button" disabled>下载安装并重启</button><a href="https://github.com/EVEAUSTIN/WorkSpace/releases" target="_blank" rel="noopener noreferrer">安装包下载页 ↗</a></div></div></section>
   <section id="workspace-sync-panel" class="panel settings-layout hidden" style="margin-bottom:16px"><div class="panel-body">
-    <h2>云端同步 <small>桌面版 0.2.0</small></h2>
+    <h2>云端同步 <small>桌面版 0.3.0</small></h2>
     <p>本机 SQLite 优先保存，登录后每 15 秒检查更新。两台电脑使用同一应用账号。AI 密钥、天气缓存和本次 AI 对话不上传。</p>
     <p class="muted">环境：emotional-newt-d5gg8duqi1ab13685 · 上海。请在 CloudBase 的 HTTP 网关 → 跨域设置中添加 <strong>localhost:17383</strong>，不加路径；若要求完整来源则填写 http://localhost:17383。</p>
     <form id="workspace-sync-login" class="form-grid">
@@ -5172,6 +5169,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
       若干（数量未知）
     </label>
 
+    <label class="check-label"><input type="checkbox" id="item-never-urgent">不会告急（不按数量提醒，可在清单中手动调整为告急）</label>
     <label>备注
       <textarea name="notes" rows="3" maxlength="1000"></textarea>
     </label>
@@ -5180,6 +5178,19 @@ if(__exports != exports)module.exports = exports;return module.exports}));
       <button type="button" data-close="item-dialog">取消</button>
       <button class="primary">保存物品</button>
     </div>
+  </form>
+</dialog>
+
+<dialog id="slot-items-dialog" style="width:min(980px,96vw)">
+  <form id="slot-items-form">
+    <h2>按格记录/补货</h2>
+    <p>盘点填写当前总数；补货填写本次新增数。补货时原数量为“若干”的物品，请先用盘点确认数量。移除一行只跳过本次记录，不删除原物品。</p>
+    <div class="form-row"><label>储物柜<select id="batch-cabinet"></select></label><label>格位<select id="batch-slot"></select></label><label>方式<select id="batch-mode"><option value="count">盘点/登记（当前总数）</option><option value="restock">补货（新增数量）</option></select></label></div>
+    <button id="batch-load" type="button">载入所选格位</button>
+    <div style="overflow:auto"><table><thead><tr><th>物品名</th><th>数量</th><th>单位</th><th>不会告急</th><th></th></tr></thead><tbody id="batch-rows"></tbody></table></div>
+    <button type="button" id="batch-add">＋ 添加一行物品</button>
+    <p id="batch-error" role="alert"></p>
+    <div class="dialog-actions"><button type="button" data-close="slot-items-dialog">取消</button><button class="primary">一次保存本格记录</button></div>
   </form>
 </dialog>
 
@@ -5685,6 +5696,8 @@ function validLockers(s){
         i.quantity<=MAX_QTY
       )
     ) &&
+    (i.neverUrgent===undefined||typeof i.neverUrgent==="boolean") &&
+    (i.manualUrgent===undefined||typeof i.manualUrgent==="boolean") &&
     str(i.unit,20) &&
     str(i.notes,1000) &&
     Number.isFinite(i.updatedAt)
@@ -8665,7 +8678,12 @@ function quantityText(q,u){
   return q===null?"若干":q+" "+(u||"件");
 }
 
+function isStockUrgent(i){return i.neverUrgent===true?i.manualUrgent===true:i.quantity===1;}
+function isStockEmpty(i){return i.neverUrgent!==true&&i.quantity===0;}
+function isStockAlert(i){return isStockUrgent(i)||isStockEmpty(i);}
+
 function stockBadge(i){
+  if(i.neverUrgent===true)return i.manualUrgent===true?'<span class="badge urgent">手动告急</span>':'<span class="badge normal">不会告急</span>';
   const[k,t]=i.quantity===null
     ?["unknown","若干"]
     :i.quantity===0
@@ -8679,7 +8697,7 @@ function stockBadge(i){
 
 function shoppingItems(){
   return L.value.items.filter(i=>
-    i.quantity!==null&&i.quantity<=1
+    isStockAlert(i)
   ).sort((a,b)=>
     a.quantity-b.quantity ||
     a.name.localeCompare(b.name,"zh-CN")
@@ -8722,8 +8740,8 @@ function renderLockers(){
 
   $("#cabinet-count").textContent=cabinets.length;
   $("#item-count").textContent=items.length;
-  $("#urgent-count").textContent=items.filter(i=>i.quantity===1).length;
-  $("#empty-count").textContent=items.filter(i=>i.quantity===0).length;
+  $("#urgent-count").textContent=items.filter(isStockUrgent).length;
+  $("#empty-count").textContent=items.filter(isStockEmpty).length;
 
   $("#locker-warning").innerHTML=L.ok
     ?""
@@ -8735,7 +8753,7 @@ function renderLockers(){
       const used=new Set(own.map(i=>i.slot)).size;
 
       const alerts=own.filter(i=>
-        i.quantity!==null&&i.quantity<=1
+        isStockAlert(i)
       ).length;
 
       return `
@@ -8789,7 +8807,7 @@ function renderLockers(){
       );
 
       const alert=own.some(i=>
-        i.quantity!==null&&i.quantity<=1
+        isStockAlert(i)
       );
 
       slots+=`
@@ -8824,11 +8842,11 @@ function renderLockers(){
     )return false;
 
     if(filter==="normal"){
-      return i.quantity!==null&&i.quantity>=2;
+      return !isStockAlert(i)&&(i.neverUrgent===true||(i.quantity!==null&&i.quantity>=2));
     }
 
-    if(filter==="urgent")return i.quantity===1;
-    if(filter==="empty")return i.quantity===0;
+    if(filter==="urgent")return isStockUrgent(i);
+    if(filter==="empty")return isStockEmpty(i);
     if(filter==="unknown")return i.quantity===null;
 
     return true;
@@ -8869,6 +8887,7 @@ function renderLockers(){
               ${i.quantity===null||i.quantity===0?"disabled":""}
             >取用</button>
 
+            ${i.neverUrgent===true?`<button data-item-alert="${esc(i.id)}">${i.manualUrgent?"取消告急":"调整为告急"}</button>`:""}
             <button data-restock="${esc(i.id)}">补货</button>
             <button data-item-edit="${esc(i.id)}">编辑</button>
             <button class="danger" data-item-delete="${esc(i.id)}">删除</button>
@@ -9080,6 +9099,7 @@ function openItem(id=null){
     $("#item-form").elements.name.value=i.name;
     $("#item-form").elements.unit.value=i.unit;
     $("#item-form").elements.notes.value=i.notes;
+    $("#item-never-urgent").checked=i.neverUrgent===true;
     $("#item-unknown").checked=i.quantity===null;
     $("#item-quantity").value=i.quantity??1;
   }
@@ -9087,6 +9107,63 @@ function openItem(id=null){
   syncUnknown();
   $("#item-dialog").showModal();
 }
+
+
+let batchTarget=null,batchDirty=false,batchRevision="";
+function batchSlotOptions(){
+  const c=L.value.cabinets.find(c=>c.id===$("#batch-cabinet").value);
+  $("#batch-slot").innerHTML=c?Array.from({length:c.slots},(_,i)=>`<option value="${i+1}">第 ${i+1} 格</option>`).join(""):"";
+}
+function batchRow(item=null){
+  const row=document.createElement("tr");row.dataset.id=item?.id||"";
+  row.innerHTML=`<td><input data-batch-name required maxlength="120" aria-label="物品名" value="${esc(item?.name||"")}"></td><td><input data-batch-quantity type="number" min="0" max="${MAX_QTY}" step="1" aria-label="数量" placeholder="留空表示若干" value="${item?($("#batch-mode").value==="restock"?0:(item.quantity??"")):1}"></td><td><input data-batch-unit maxlength="20" aria-label="单位" value="${esc(item?.unit||"件")}"></td><td><input data-batch-never type="checkbox" aria-label="不会告急" ${item?.neverUrgent?"checked":""}></td><td><button type="button" data-batch-remove>移除此行</button></td>`;
+  $("#batch-rows").append(row);
+}
+function loadBatch(){
+  if(batchDirty&&!confirm("重新载入会放弃当前批量表单中尚未保存的输入，继续？"))return;
+  const cabinetId=$("#batch-cabinet").value,slot=Number($("#batch-slot").value);
+  if(!L.value.cabinets.some(c=>c.id===cabinetId&&slot>=1&&slot<=c.slots))return;
+  batchTarget={cabinetId,slot,mode:$("#batch-mode").value};batchRevision=JSON.stringify(L.value);
+  $("#batch-rows").replaceChildren();
+  const items=L.value.items.filter(i=>i.cabinetId===cabinetId&&i.slot===slot);
+  items.forEach(batchRow);if(!items.length)batchRow();
+  batchDirty=false;$("#batch-error").textContent="";
+}
+$("#new-slot-items").onclick=()=>{
+  if(!L.ok)return;
+  if(!L.value.cabinets.length){toast("请先建立储物柜。");openCabinet();return;}
+  $("#batch-cabinet").innerHTML=L.value.cabinets.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");
+  if(activeCabinet!=="all")$("#batch-cabinet").value=activeCabinet;
+  batchSlotOptions();if(activeSlot!=="all")$("#batch-slot").value=String(activeSlot);
+  $("#batch-mode").value="count";batchDirty=false;loadBatch();$("#slot-items-dialog").showModal();
+};
+$("#batch-cabinet").onchange=batchSlotOptions;
+$("#batch-load").onclick=loadBatch;
+$("#batch-add").onclick=()=>{batchRow();batchDirty=true;};
+$("#batch-rows").oninput=()=>{batchDirty=true;};
+$("#batch-rows").onclick=e=>{if(e.target.closest("[data-batch-remove]")){e.target.closest("tr").remove();batchDirty=true;}};
+$("#slot-items-form").onsubmit=e=>{
+  e.preventDefault();const fail=text=>{$("#batch-error").textContent=text;};
+  if(!batchTarget||batchTarget.cabinetId!==$("#batch-cabinet").value||batchTarget.slot!==Number($("#batch-slot").value)||batchTarget.mode!==$("#batch-mode").value){fail("选择已变化，请点击“载入所选格位”后再填写。");return;}
+  if(batchRevision!==JSON.stringify(L.value)){fail("库存已变化，请重新载入后再填写，避免覆盖其他修改。");return;}
+  const rows=[...$("#batch-rows").rows];if(!rows.length){fail("请至少填写一行物品。");return;}
+  const n=copy(L.value),names=new Set();
+  for(const row of rows){
+    const name=row.querySelector("[data-batch-name]").value.trim(),unit=row.querySelector("[data-batch-unit]").value.trim()||"件";
+    const raw=row.querySelector("[data-batch-quantity]").value,amount=raw===""?null:Number(raw),neverUrgent=row.querySelector("[data-batch-never]").checked;
+    if(!name||names.has(name)){fail("同一批次的物品名不能为空或重复，请合并数量后填写。");return;}names.add(name);
+    const old=row.dataset.id?n.items.find(i=>i.id===row.dataset.id):null;
+    if(!old&&n.items.some(i=>i.cabinetId===batchTarget.cabinetId&&i.slot===batchTarget.slot&&i.name===name)){fail("此格已有同名物品，请载入已有行修改，避免重复登记。");return;}
+    if(amount!==null&&(!Number.isInteger(amount)||amount<0||amount>MAX_QTY)){fail("数量必须为有效非负整数。");return;}
+    if(batchTarget.mode==="restock"&&old&&(old.quantity===null||amount===null)){fail("补货需要明确原数量与新增数；数量未知时请先盘点。");return;}
+    const quantity=batchTarget.mode==="restock"&&old?old.quantity+amount:amount;
+    if(quantity!==null&&quantity>MAX_QTY){fail("补货后数量超出上限。");return;}
+    const item={...(old||{id:uid(),notes:""}),cabinetId:batchTarget.cabinetId,slot:batchTarget.slot,name,quantity,unit,neverUrgent,manualUrgent:neverUrgent&&old?.manualUrgent===true,updatedAt:Date.now()};
+    if(old)n.items[n.items.indexOf(old)]=item;else n.items.push(item);
+    addStockLog(n,item,batchTarget.mode==="restock"?"按格补货":"按格盘点",quantityText(old?.quantity??null,old?.unit||unit)+" → "+quantityText(quantity,unit));
+  }
+  if(persist(L,n)){$("#slot-items-dialog").close();batchDirty=false;}
+};
 
 $("#new-item").onclick=()=>openItem();
 $("#item-cabinet").onchange=()=>fillItemSlots();
@@ -9099,6 +9176,8 @@ $("#item-form").onsubmit=e=>{
 
   const i={
     id:editingItem||uid(),
+    neverUrgent:$("#item-never-urgent").checked,
+    manualUrgent:$("#item-never-urgent").checked&&(L.value.items.find(x=>x.id===editingItem)?.manualUrgent===true),
     name:d.get("name").trim(),
     cabinetId:d.get("cabinetId"),
     slot:Number(d.get("slot")),
@@ -9142,15 +9221,20 @@ $("#item-form").onsubmit=e=>{
 
 $("#inventory-body").onclick=e=>{
   const b=e.target.closest(
-    "[data-consume],[data-restock],[data-item-edit],[data-item-delete]"
+    "[data-consume],[data-restock],[data-item-edit],[data-item-delete],[data-item-alert]"
   );
   if(!b)return;
 
   const id=b.dataset.consume||
     b.dataset.restock||
     b.dataset.itemEdit||
-    b.dataset.itemDelete;
+    b.dataset.itemDelete||b.dataset.itemAlert;
 
+  if(b.dataset.itemAlert){
+    const n=copy(L.value),item=n.items.find(x=>x.id===id);
+    if(item?.neverUrgent===true){item.manualUrgent=!item.manualUrgent;item.updatedAt=Date.now();addStockLog(n,item,item.manualUrgent?"手动告急":"取消告急","数量保持不变");persist(L,n);}
+    return;
+  }
   if(b.dataset.consume)openQuantity(id,"consume");
   if(b.dataset.restock)openQuantity(id,"restock");
   if(b.dataset.itemEdit)openItem(id);
@@ -9308,7 +9392,7 @@ function exportShopping(){
       new Date().toLocaleString("zh-CN"),
       "",
       ...a.map((i,n)=>
-        `${n+1}. ${i.name}｜${i.quantity===0?"耗尽":"告急"}｜剩余 ${i.quantity} ${i.unit}\n   ${itemLocation(i)}`
+        `${n+1}. ${i.name}｜${isStockEmpty(i)?"耗尽":"告急"}｜剩余 ${i.quantity} ${i.unit}\n   ${itemLocation(i)}`
       ),
       a.length?"":"暂无待购物品。"
     ].join("\n"),
@@ -10682,10 +10766,11 @@ function renderHome(){
     )
   ).sort((a,b)=>a.deadline.localeCompare(b.deadline));
 
+  $("#home-due-panel").classList.toggle("hidden",!M.ok||!events.length);
   $("#home-events").innerHTML=!M.ok
     ?'<div class="empty">备忘录暂不可用。</div>'
     :events.length
-      ?events.slice(0,5).map(t=>`
+      ?events.map(t=>`
         <div class="feed-item">
           <div class="feed-main">
             <div class="feed-title">${esc(t.title)}</div>
@@ -10753,7 +10838,7 @@ function renderHome(){
           </div>
         </div>
       `).join("")
-      :'<div class="empty">暂无购买提醒。“若干”不参与缺货判断。</div>';
+      :'<div class="empty">暂无购买提醒。“若干”不参与自动缺货判断。</div>';
 
   updateAIHome();
   renderHealth();
@@ -12259,6 +12344,11 @@ if(window.qijianDesktop){
   };
   const names=["备忘录","储物柜","晨起提醒","每日记录","药箱","游玩人生"];
   window.qijianSyncWorkspace={
+    prepareUpdate:async()=>{
+      if(dailyDirty||aiBusy||document.querySelector('dialog[open]'))throw Error("请先保存每日记录、完成 AI 操作并关闭编辑弹窗。");
+      await persistNotes();
+      if(!notesReady||saveRevision!==savedRevision)throw Error("笔记尚未保存成功，暂不重启。");
+    },
     specs:[...STORES.map((s,i)=>({key:s.key,label:names[i],empty:syncEmpty[s.key],valid:value=>s.validate(value)})),
       {key:"desktop:notebook",label:"笔记",empty:{folders:[],notes:[]},valid:validNotes}],
     ready:()=>notesReady&&!notesFailed&&STORES.every(s=>s.ok),
@@ -12278,6 +12368,7 @@ if(window.qijianDesktop){
 <script src="assets/cloudbase-auth-3.10.4.js"></script>
 <script src="assets/workspace-sync-core.js"></script>
 <script src="assets/workspace-sync.js"></script>
+<script src="assets/desktop-updates.js"></script>
 </body>
 </html>
   

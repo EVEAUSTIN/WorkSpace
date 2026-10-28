@@ -2,6 +2,8 @@
 const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path = require('node:path');
 const { startServer, ORIGIN } = require('./server.cjs');
+const { createUpdater } = require('./updater.cjs');
+const { autoUpdater } = require('electron-updater');
 const { openStorage } = require('./storage.cjs');
 let database;
 let mainWindow;
@@ -30,6 +32,15 @@ else {
       } catch { event.returnValue = { error: '本地数据库操作失败，原记录未被主动清空。' }; }
     });
     mainWindow = new BrowserWindow({ width: 1320, height: 900, minWidth: 760, minHeight: 600, title: '栖间工作台', webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true } });
+    const updates = createUpdater({app,autoUpdater,onState:state=>{if(!mainWindow.isDestroyed())mainWindow.webContents.send('qijian:update-state',state);}});
+    ipcMain.handle('qijian:update', (event,action) => {
+      if(event.senderFrame!==mainWindow.webContents.mainFrame||event.senderFrame.url!==entry)throw Error('不允许的更新来源');
+      return updates.run(action);
+    });
+    if(app.isPackaged){
+      const timer=setTimeout(()=>updates.run('check'),10000);timer.unref();
+      const interval=setInterval(()=>updates.run('check'),6*60*60*1000);interval.unref();
+    }
     mainWindow.webContents.setWindowOpenHandler(({ url }) => {
       if (url === ORIGIN + '/cloudbase-test.html') shell.openExternal('https://eveaustin.github.io/WorkSpace/cloudbase-test.html');
       else if (/^https?:\/\//i.test(url)) shell.openExternal(url);

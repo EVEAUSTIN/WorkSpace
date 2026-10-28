@@ -1,13 +1,13 @@
 {
   "name": "qijian-workspace",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "栖间个人工作台",
   "main": "desktop/main.cjs",
   "scripts": {
     "start": "electron .",
     "dist:win": "electron-builder --win nsis",
-    "test:desktop": "node --test tests/desktop-storage.test.cjs tests/workspace-sync.test.cjs tests/desktop-server.test.cjs"
+    "test:desktop": "node --test tests/desktop-storage.test.cjs tests/workspace-sync.test.cjs tests/desktop-server.test.cjs tests/desktop-updater.test.cjs"
   },
   "devDependencies": {
     "electron": "45.0.0",
@@ -16,9 +16,36 @@
   "build": {
     "appId": "cn.qijian.workspace",
     "productName": "栖间工作台",
-    "directories": {"output": "dist"},
-    "files": ["desktop/**", "index.html", "assets/**", "cloudbase-test.html"],
-    "win": {"target": "nsis"},
-    "nsis": {"oneClick": false, "allowToChangeInstallationDirectory": true, "deleteAppDataOnUninstall": false}
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "desktop/**",
+      "index.html",
+      "assets/**",
+      "cloudbase-test.html"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false,
+      "createDesktopShortcut": true,
+      "shortcutName": "栖间工作台",
+      "artifactName": "Qijian-Setup-${version}-${arch}.${ext}"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "EVEAUSTIN",
+        "repo": "WorkSpace",
+        "releaseType": "draft"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "6.8.11"
   }
 }
