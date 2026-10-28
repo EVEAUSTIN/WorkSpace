@@ -123,10 +123,17 @@ try:
         a.locator('[data-page=home]').click();assert a.locator('[data-medication-check]').is_checked()
         a.locator('#save-medication').click();assert a.evaluate('MED.value.items[0].quantity')==8
         sync(a);assert rows['qijian-medicine-v1']['version']==2
+        a.evaluate("""()=>{
+          const prefs=copy(LIT_PREF.value);prefs.direction='同步的城市环境方向';persist(LIT_PREF,prefs);
+          persist(LIT_HISTORY,{entries:[{doi:'10.1234/synced-reading',title:'Synced urban paper',zhTitle:'同步的文献标题',journal:'Synthetic Journal',issn:'0169-2046',published:'2026-10-28',readAt:1,metric:null}]});
+        }""")
+        sync(a);sync(b)
+        assert b.evaluate('LIT_PREF.value.direction')=='同步的城市环境方向'
+        assert b.evaluate('LIT_HISTORY.value.entries[0].zhTitle')=='同步的文献标题'
         b.locator('#workspace-sync-logout').click();b.wait_for_function("document.querySelector('#workspace-sync-status').textContent.includes('已退出')")
         b.reload();b.wait_for_function('notesReady');assert b.locator('#workspace-sync-now').is_disabled()
         assert not errors,errors
         browser.close()
-    print('PASS: real SDK synthetic login, two-device business/notes sync, conflict UI, deletion, medication ledger/stock, persistent session restore and logout; secrets excluded.')
+    print('PASS: real SDK synthetic login, two-device business/notes sync, conflict UI, deletion, medication ledger/stock, literature preferences/history, persistent session restore and logout; secrets excluded.')
 finally:
     server.shutdown()

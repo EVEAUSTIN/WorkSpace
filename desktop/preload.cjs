@@ -6,6 +6,7 @@ function request(operation, key, value) {
   return result.value;
 }
 contextBridge.exposeInMainWorld('qijianDesktop', {
+  journalMetric: issn => ipcRenderer.invoke('qijian:journal-metric', issn),
   update: action => ipcRenderer.invoke('qijian:update', action),
   onUpdate: callback => {
     const handler=(_event,state)=>callback(state);

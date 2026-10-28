@@ -2,6 +2,7 @@
 const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path = require('node:path');
 const { startServer, ORIGIN } = require('./server.cjs');
+const { fetchJournalMetric } = require('./literature-metrics.cjs');
 const { createUpdater } = require('./updater.cjs');
 const { autoUpdater } = require('electron-updater');
 const { openStorage } = require('./storage.cjs');
@@ -33,6 +34,10 @@ else {
     });
     mainWindow = new BrowserWindow({ width: 1320, height: 900, minWidth: 760, minHeight: 600, title: '栖间工作台', webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true } });
     const updates = createUpdater({app,autoUpdater,onState:state=>{if(!mainWindow.isDestroyed())mainWindow.webContents.send('qijian:update-state',state);}});
+    ipcMain.handle('qijian:journal-metric', async (event,issn) => {
+      if(event.senderFrame!==mainWindow.webContents.mainFrame||event.senderFrame.url!==entry)throw Error('不允许的指标请求来源');
+      try{return {metric:await fetchJournalMetric(issn)}}catch{return {error:'官网无法访问或没有可明确核验的带年份影响因子，请在指标管理中对照来源核对。'}}
+    });
     ipcMain.handle('qijian:update', (event,action) => {
       if(event.senderFrame!==mainWindow.webContents.mainFrame||event.senderFrame.url!==entry)throw Error('不允许的更新来源');
       return updates.run(action);
