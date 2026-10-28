@@ -111,10 +111,22 @@ try:
         b.reload();b.wait_for_function("document.querySelector('#workspace-sync-status').textContent.startsWith('已同步')",timeout=15000)
         assert b.evaluate('notesState.notes[0].title')=='同步笔记'
         a.evaluate('persist(M,[])');sync(a);sync(b);assert b.evaluate('M.value.length')==0
+        # Medication ledger and inventory move together as one versioned module.
+        a.evaluate("""()=>{
+          persist(MED,{items:[{id:'sync-med',name:'同步药品',quantity:10,unit:'片',expiry:'2099-10',dosage:'',purpose:''}],logs:[],illness:{active:true,name:'同步状态',plan:''},care:{version:1,conditions:[{id:'sync-condition',name:'同步状态',active:true,notes:'',regimens:[{id:'sync-regimen',medicineId:'sync-med',dose:2,frequency:1}]}],intakes:[]}});
+        }""")
+        sync(a);sync(b)
+        b.locator('[data-page=home]').click();b.locator('[data-medication-check]').check();b.locator('#save-medication').click()
+        sync(b);sync(a)
+        assert a.evaluate('MED.value.items[0].quantity')==8
+        assert a.evaluate('MED.value.care.intakes.length')==1
+        a.locator('[data-page=home]').click();assert a.locator('[data-medication-check]').is_checked()
+        a.locator('#save-medication').click();assert a.evaluate('MED.value.items[0].quantity')==8
+        sync(a);assert rows['qijian-medicine-v1']['version']==2
         b.locator('#workspace-sync-logout').click();b.wait_for_function("document.querySelector('#workspace-sync-status').textContent.includes('已退出')")
         b.reload();b.wait_for_function('notesReady');assert b.locator('#workspace-sync-now').is_disabled()
         assert not errors,errors
         browser.close()
-    print('PASS: real SDK synthetic login, two-device business/notes sync, conflict UI, deletion, persistent session restore and logout; secrets excluded.')
+    print('PASS: real SDK synthetic login, two-device business/notes sync, conflict UI, deletion, medication ledger/stock, persistent session restore and logout; secrets excluded.')
 finally:
     server.shutdown()

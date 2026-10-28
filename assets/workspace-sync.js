@@ -85,7 +85,8 @@
     try{
       const result=await state.engine.cycle();if(generation!==state.generation)return;
       if(result.conflicts)status('有 '+result.conflicts+' 个模块冲突，请在 AI 设置 → 云端同步中处理；本机修改已保留。');
-      else if(result.pending)status('有待同步更新；请保存并离开正在编辑的输入框，应用会自动重试。');
+      else if(result.pending)status(workspace.pendingMedication?.()?'首页服药选择尚未保存，请保存或放弃选择后继续同步。':'有待同步更新；请保存并离开正在编辑的输入框，应用会自动重试。');
+      else if(workspace.pendingMedication?.())status('已保存数据已同步；首页服药选择尚未保存，尚未扣减库存。');
       else status('已同步 · '+new Date().toLocaleTimeString('zh-CN',{hour12:false}));
     }catch(error){if(generation===state.generation){if(['WRITE','REMOTE','META','LOCAL'].includes(error.message))state.blocked=true;status(errorText(error)+(state.blocked?' 已暂停自动同步，请排查后重新登录。':''));}}
     finally{if(generation===state.generation){state.busy=false;controls();conflicts();}}

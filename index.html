@@ -1618,6 +1618,20 @@ dialog textarea.code-input{
 @media(max-width:800px){.lit-layout{grid-template-columns:1fr}.lit-side{grid-template-columns:1fr 1fr}.lit-title-row h1{font-size:32px;letter-spacing:3px}.lit-edition-mark{font-size:11px}.lit-news-grid{gap:0 16px}.lit-card h2{font-size:19px}.lit-lead h2{font-size:25px}}
 @media(max-width:520px){.lit-news-grid{grid-template-columns:1fr}.lit-lead{padding:20px}.lit-lead h2{font-size:24px;max-width:100%}.lit-card h2{font-size:21px}.lit-side{grid-template-columns:1fr}.lit-title-row h1{font-size:30px}.lit-edition-mark{font-size:9px}.lit-toolbar{gap:7px}.lit-toolbar select{font-size:11px;padding:8px;max-width:160px}.lit-toolbar input{flex-basis:100%}.lit-meta-bar{gap:12px}.lit-source-grid{grid-template-columns:1fr 1fr;gap:8px}.lit-source-tile{padding:10px}.lit-edition-line{font-size:9px}.lit-topic-tabs{gap:5px}#lit-ai-form{flex-direction:column}.lit-lead .lit-citations{font-size:10px}}
 
+
+.weather-medication-row{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start;margin-bottom:18px}
+.weather-medication-row.has-medication{grid-template-columns:minmax(0,1.2fr) minmax(340px,1fr)}
+.weather-medication-row #home-weather{margin-bottom:0;min-width:0}
+.has-medication #home-weather .weather-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+.has-medication #home-weather .weather-main-row{flex-wrap:wrap;gap:14px}
+.has-medication #home-weather .weather-temperature{font-size:60px}
+#home-medication{min-width:0;margin:0;max-height:680px;overflow:auto}
+#home-medication h2{margin-bottom:12px}.medication-group{border-top:1px solid var(--line);padding:12px 0}
+.medication-checks{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.medication-check{display:flex;align-items:center;gap:5px;border:1px solid #c5d1c2;border-radius:8px;padding:7px 10px;font-size:12px;background:#fff}
+.medication-check:has(input:checked){background:#dcebdc;border-color:#73977c;color:#244a35}.medication-check small{font-size:10px}
+.regimen-row{border:1px solid var(--line);border-radius:8px;padding:12px;margin:8px 0;display:grid;gap:8px;grid-template-columns:minmax(140px,2fr) minmax(90px,1fr) minmax(100px,1fr) auto;align-items:end}
+@media(max-width:1050px){.weather-medication-row.has-medication{grid-template-columns:minmax(0,1fr)}#home-medication{max-height:none}}
+@media(max-width:600px){.regimen-row{grid-template-columns:1fr 1fr}.regimen-row label:first-child{grid-column:1/-1}}
 </style>
 <script>
 /**
@@ -3875,11 +3889,14 @@ if(__exports != exports)module.exports = exports;return module.exports}));
   <div id="home-morning"></div>
   <section id="home-due-panel" class="panel hidden" style="margin-bottom:16px;border:2px solid #d49b48"><div class="panel-heading"><h2>◷ 临期与逾期事件</h2><button data-go="memo">查看全部</button></div><div id="home-events" style="max-height:360px;overflow:auto"></div></section>
 
+  <div id="home-weather-medication" class="weather-medication-row">
   <section id="home-weather" class="weather-summary" aria-labelledby="home-weather-title">
     <div class="weather-card-top"><h2 id="home-weather-title">天气 · 北京</h2><button class="weather-link" data-go="weather">天气详情 <span aria-hidden="true">↗</span></button></div>
     <div id="home-weather-content"><div class="weather-loading">正在获取北京天气…</div></div>
     <div class="weather-card-footer"><span id="home-weather-status" role="status">天气数据加载中</span><button type="button" class="weather-refresh" data-weather-refresh>↻ 刷新</button></div>
   </section>
+  <section id="home-medication" class="panel hidden" aria-labelledby="home-medication-title"><div class="panel-body"><h2 id="home-medication-title">♡ 服药提醒</h2><label>记录日期 <input id="medication-day" type="date"></label><div id="medication-reminders"></div><p id="medication-save-status" role="status"></p><div class="row"><button id="save-medication" class="primary" type="button">保存服药记录并扣减库存</button><button id="discard-medication" type="button">放弃未保存选择</button></div><small>仅记录实际已服用的次数；每次用量与药箱库存使用同一单位。这里保存的消耗无需再手动重复登记；取消已保存的勾选并保存，会恢复原次用量。</small></div></section>
+  </div>
 
   <section class="ai-box">
     <div class="ai-box-title">
@@ -4629,7 +4646,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
 
   <section id="desktop-update-panel" class="panel hidden" style="margin-bottom:16px"><div class="panel-body"><h2>应用更新</h2><p id="desktop-update-status" role="status">正在读取版本信息…</p><div class="row"><button id="desktop-update-check" type="button">检查更新</button><button id="desktop-update-install" type="button" disabled>下载安装并重启</button><a href="https://github.com/EVEAUSTIN/WorkSpace/releases" target="_blank" rel="noopener noreferrer">安装包下载页 ↗</a></div></div></section>
   <section id="workspace-sync-panel" class="panel settings-layout hidden" style="margin-bottom:16px"><div class="panel-body">
-    <h2>云端同步 <small>桌面版 0.3.0</small></h2>
+    <h2>云端同步 <small>桌面版 0.4.0</small></h2>
     <p>本机 SQLite 优先保存，登录后每 15 秒检查更新。两台电脑使用同一应用账号。AI 密钥、天气缓存和本次 AI 对话不上传。</p>
     <p class="muted">环境：emotional-newt-d5gg8duqi1ab13685 · 上海。请在 CloudBase 的 HTTP 网关 → 跨域设置中添加 <strong>localhost:17383</strong>，不加路径；若要求完整来源则填写 http://localhost:17383。</p>
     <form id="workspace-sync-login" class="form-grid">
@@ -4732,28 +4749,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
           <h2>♡ 生病状态与服药需求</h2>
         </div>
 
-        <form id="illness-form" class="panel-body feature-form">
-          <label>
-            <span>
-              <input type="checkbox" id="illness-active">
-              当前生病中
-            </span>
-          </label>
-
-          <label>症状 / 疾病
-            <input id="illness-name" maxlength="200">
-          </label>
-
-          <label>服药安排
-            <textarea
-              id="illness-plan"
-              maxlength="3000"
-              placeholder="按医嘱填写：药名、每次用量、时间、疗程等；会在主页高亮显示"
-            ></textarea>
-          </label>
-
-          <button class="primary">保存状态</button>
-        </form>
+        <div class="panel-body"><div id="illness-list"></div><button id="add-illness" class="primary" type="button">＋ 新增生病状态与服药需求</button><p class="muted">可同时记录多项，每项可关联多种已有药品。每次用量请按医嘱填写，系统不自动推荐剂量。</p></div>
       </section>
 
       <section class="panel" style="margin-top:16px">
@@ -4927,6 +4923,21 @@ if(__exports != exports)module.exports = exports;return module.exports}));
     </section>
   </div>
 </section>
+
+<dialog id="illness-dialog" style="width:min(860px,96vw)">
+  <form id="illness-form" class="feature-form">
+    <h2 id="illness-dialog-title">生病状态与服药需求</h2>
+    <input id="illness-id" type="hidden">
+    <label class="check-label"><input id="illness-active" type="checkbox" checked>当前进行中</label>
+    <label>症状 / 疾病<input id="illness-name" maxlength="200" required></label>
+    <label>备注 / 医嘱<textarea id="illness-plan" maxlength="3000" placeholder="原有文字安排保留在这里，可在下方关联药品"></textarea></label>
+    <div id="illness-regimens"></div>
+    <button id="add-regimen" type="button">＋ 选择药品并设置用量</button>
+    <small>每次用量与药品库存单位必须一致，例如库存单位为“片”，这里也填片数；不自动换算瓶、盒、片。同一药品用于多项状态时会分别扣减，请勿为同一次实际服药重复打卡。</small>
+    <p id="illness-error" role="alert"></p>
+    <div class="dialog-actions"><button type="button" data-close="illness-dialog">取消</button><button class="primary">保存本项状态与需求</button></div>
+  </form>
+</dialog>
 
 <!-- 药品编辑 -->
 <dialog id="medicine-dialog">
@@ -5260,6 +5271,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
 <input type="file" id="media-file" hidden>
 <div id="toast" role="status"></div>
 
+<script src="assets/medication-core.js"></script>
 <script>
 "use strict";
 
@@ -10951,7 +10963,8 @@ function validMedicineState(s){
     s.illness &&
     typeof s.illness.active==="boolean" &&
     str(s.illness.name,200) &&
-    str(s.illness.plan,3000);
+    str(s.illness.plan,3000) &&
+    (s.care===undefined||QijianMedication.validCare(s.care));
 }
 
 function validTravelState(s){
@@ -11063,38 +11076,20 @@ function renderMedicine(){
     `).join("") ||
     '<div class="empty">暂无记录。</div>';
 
-  if(!$("#illness-form").contains(document.activeElement)){
-    $("#illness-active").checked=MED.value.illness.active;
-    $("#illness-name").value=MED.value.illness.name;
-    $("#illness-plan").value=MED.value.illness.plan;
-  }
+  renderIllnessList();
 }
 
 function renderHealth(){
-  const ill=MED.value.illness;
+  renderMedicationReminder();
+  const illnesses=QijianMedication.care(MED.value).conditions.filter(c=>c.active);
 
   const expired=MED.value.items.filter(m=>
     medicineExpired(m)&&m.quantity>0
   );
 
   $("#home-health").innerHTML=(
-    ill.active
-      ?`
-        <section class="health-alert">
-          <h2>♡ 生病中 · ${esc(ill.name||"请照顾好自己")}</h2>
-
-          <p style="white-space:pre-wrap">${
-            esc(
-              ill.plan||
-              "尚未填写服药安排，请在药箱中按医嘱设置。"
-            )
-          }</p>
-
-          <button data-open-medicine>
-            查看药箱 / 更新状态
-          </button>
-        </section>
-      `
+    illnesses.length
+      ?illnesses.map(ill=>`<section class="health-alert"><h2>♡ 生病中 · ${esc(ill.name)}</h2><p style="white-space:pre-wrap">${esc(ill.notes||(!ill.regimens.length?"请在药箱中关联药品并填写医嘱用量。":"按已设置的安排记录实际服药。"))}</p><button data-open-medicine>查看药箱 / 更新状态</button></section>`).join("")
       :""
   )+(
     expired.length
@@ -11174,6 +11169,7 @@ $("#medicine-form").onsubmit=e=>{
     purpose:$("#med-purpose").value.trim()
   };
 
+  if(old&&old.unit!==m.unit&&QijianMedication.care(MED.value).conditions.some(c=>c.regimens.some(r=>r.medicineId===old.id))){toast("此药品已关联服药安排，不能直接改变库存单位；请另建正确单位的批次并重新关联。");return;}
   const next=copy(MED.value);
 
   next.items=old
@@ -11281,22 +11277,124 @@ $("#med-stock-form").onsubmit=e=>{
   }
 };
 
-$("#illness-form").onsubmit=e=>{
-  e.preventDefault();
-
-  const next=copy(MED.value);
-
-  next.illness={
-    active:$("#illness-active").checked,
-    name:$("#illness-name").value.trim(),
-    plan:$("#illness-plan").value.trim()
+const MEDICATION_DRAFT_KEY="desktop:medication-draft";
+let medicationDay=day(new Date()),medicationLastToday=medicationDay;
+let medicationDraft={date:medicationDay,changes:{}},medicationDraftError="";
+function medicationDraftDirty(){return !!medicationDraftError||Object.keys(medicationDraft.changes).length>0;}
+function saveMedicationDraft(){
+  try{
+    if(Object.keys(medicationDraft.changes).length)workspaceStorage.setItem(MEDICATION_DRAFT_KEY,JSON.stringify(medicationDraft));
+    else workspaceStorage.removeItem(MEDICATION_DRAFT_KEY);
+    medicationDraftError="";return true;
+  }catch{medicationDraftError="未保存的勾选暂未写入本机，请不要关闭应用，先检查存储空间。";return false;}
+}
+function renderIllnessList(){
+  const value=QijianMedication.care(MED.value);
+  $("#illness-list").innerHTML=value.conditions.map(c=>`<article class="feature-card"><h3>${esc(c.name)} <span class="badge">${c.active?"进行中":"已结束"}</span></h3><p style="white-space:pre-wrap">${esc(c.notes)}</p>${c.regimens.map(r=>{const m=MED.value.items.find(m=>m.id===r.medicineId);return `<p>${esc(m?.name||"药品已删除")} · 每次 ${r.dose} ${esc(m?.unit||"")} · 一日 ${r.frequency} 次</p>`;}).join("")}<div class="row"><button type="button" data-illness-edit="${esc(c.id)}">编辑本项</button><button type="button" data-illness-toggle="${esc(c.id)}">${c.active?"结束本项":"重新启用"}</button></div></article>`).join("")||'<p class="empty">暂无生病状态，可新增多项并分别设置服药需求。</p>';
+}
+function addRegimenRow(regimen=null){
+  const medicines=MED.value.items.filter(m=>!medicineExpired(m));
+  const selected=MED.value.items.find(m=>m.id===regimen?.medicineId);
+  const options=medicines.map(m=>`<option value="${esc(m.id)}">${esc(m.name)} · ${esc(m.expiry)} · 库存 ${m.quantity} ${esc(m.unit)}</option>`);
+  if(regimen&&!medicines.some(m=>m.id===regimen.medicineId))options.unshift(`<option value="${esc(regimen.medicineId)}">${esc(selected?.name||"原药品已删除")} · 请重新选择有效批次</option>`);
+  if(!options.length){$("#illness-error").textContent="请先在药箱登记有效药品，再设置服药需求。";return;}
+  const row=document.createElement("div");row.className="regimen-row";row.dataset.id=regimen?.id||uid();
+  row.innerHTML=`<label>药箱已有药品<select data-regimen-medicine required>${options.join("")}</select></label><label>每次用量 <small data-regimen-unit></small><input data-regimen-dose type="number" min="0.01" max="${MAX_QTY}" step="0.01" value="${regimen?.dose??1}" required></label><label>服药频率<select data-regimen-frequency>${[1,2,3,4,5,6].map(n=>`<option value="${n}">一日 ${n} 次</option>`).join("")}</select></label><button data-remove-regimen type="button">移除</button>`;
+  if(regimen)row.querySelector('[data-regimen-medicine]').value=regimen.medicineId;
+  row.querySelector('[data-regimen-frequency]').value=String(regimen?.frequency||1);
+  const updateUnit=()=>{const m=MED.value.items.find(m=>m.id===row.querySelector('[data-regimen-medicine]').value);row.querySelector('[data-regimen-unit]').textContent=m?'（'+m.unit+'）':"（先选有效药品）";};
+  row.querySelector('[data-regimen-medicine]').onchange=updateUnit;updateUnit();$("#illness-regimens").append(row);
+}
+function openIllness(id=""){
+  const c=QijianMedication.care(MED.value).conditions.find(c=>c.id===id);
+  $("#illness-id").value=c?.id||"";$("#illness-name").value=c?.name||"";$("#illness-active").checked=c?.active??true;$("#illness-plan").value=c?.notes||"";
+  $("#illness-dialog-title").textContent=c?"编辑本项生病状态与服药需求":"新增生病状态与服药需求";
+  $("#illness-regimens").replaceChildren();$("#illness-error").textContent="";
+  c?.regimens.forEach(addRegimenRow);$("#illness-dialog").showModal();
+}
+function renderMedicationReminder(){
+  const today=day(new Date());
+  if(today!==medicationLastToday){if(!medicationDraftDirty()&&medicationDay===medicationLastToday)medicationDay=today;medicationLastToday=today;}
+  const rows=QijianMedication.schedules(MED.value,medicationDay),groups=new Map();
+  for(const row of rows){if(!groups.has(row.regimenId))groups.set(row.regimenId,[]);groups.get(row.regimenId).push(row);}
+  const show=MED.ok&&(rows.length>0||medicationDraftDirty());
+  $("#home-medication").classList.toggle("hidden",!show);$("#home-weather-medication").classList.toggle("has-medication",show);
+  $("#medication-day").max=today;$("#medication-day").value=medicationDay;
+  $("#medication-reminders").innerHTML=[...groups.values()].map(group=>{
+    const first=group[0];return `<div class="medication-group"><strong>${esc(first.conditionName)} · ${esc(first.medicineName)}</strong><p class="muted">${first.history?"原安排 / 已结束安排的已保存记录":"每次 "+first.amount+" "+esc(first.unit)+" · 一日 "+first.frequency+" 次"}</p><div class="medication-checks">${group.map(row=>{
+      const edit=medicationDraft.date===medicationDay?medicationDraft.changes[row.key]:null,taken=edit?edit.take:!!row.record;
+      return `<label class="medication-check"><input type="checkbox" data-medication-check="${esc(row.key)}" ${taken?"checked":""} ${!row.available&&!row.record?"disabled":""}><span>${esc(row.record?.label||row.label)}${row.record?`<small> · 已保存 ${row.record.amount} ${esc(row.record.unit)}</small>`:""}</span></label>`;
+    }).join("")}</div>${!first.available&&!first.history?'<small>原药品已删除或在记录月份已到期，请到药箱核对，不能新增服药打卡。</small>':""}</div>`;
+  }).join("")||'<p class="empty">这一天暂无服药安排或已保存记录。</p>';
+  const count=Object.keys(medicationDraft.changes).length;
+  $("#medication-save-status").textContent=medicationDraftError||(count?"有 "+count+" 次选择尚未保存，库存尚未扣减 / 恢复。":"勾选实际已服药的次数后保存；已保存的次数再次保存不会重复扣减。");
+  $("#discard-medication").disabled=!medicationDraftDirty();
+}
+function initializeMedicationUI(){
+  try{
+    const raw=workspaceStorage.getItem(MEDICATION_DRAFT_KEY);
+    if(raw){const draft=JSON.parse(raw);if(!validDate(draft.date)||!draft.changes||typeof draft.changes!=="object"||Array.isArray(draft.changes)||Object.keys(draft.changes).length>600||!Object.values(draft.changes).every(e=>e&&typeof e.take==="boolean"&&(e.expected===null||typeof e.expected==="string")&&typeof e.schedule==="string"))throw Error();medicationDraft=draft;medicationDay=draft.date;}
+  }catch{medicationDraftError="未保存的服药选择读取异常，已保护原记录。请核对后使用“放弃未保存选择”重置。";}
+  $("#add-illness").onclick=()=>{if(MED.ok)openIllness();};
+  $("#add-regimen").onclick=()=>{if($("#illness-regimens").children.length>=30){$("#illness-error").textContent="每项最多设置 30 种药品。";return;}addRegimenRow();};
+  $("#illness-regimens").onclick=e=>{if(e.target.closest('[data-remove-regimen]'))e.target.closest('.regimen-row').remove();};
+  $("#illness-list").onclick=e=>{
+    const edit=e.target.closest('[data-illness-edit]'),toggle=e.target.closest('[data-illness-toggle]');
+    if(edit)openIllness(edit.dataset.illnessEdit);
+    if(toggle){if(medicationDraftDirty()){toast("请先保存或放弃首页尚未保存的服药选择。");return;}const next=copy(MED.value),care=QijianMedication.care(next),c=care.conditions.find(c=>c.id===toggle.dataset.illnessToggle);if(c){c.active=!c.active;QijianMedication.withCare(next,care);persist(MED,next);}}
   };
+  $("#illness-form").onsubmit=e=>{
+    e.preventDefault();const fail=text=>{$("#illness-error").textContent=text;};
+    if(medicationDraftDirty()){fail("请先保存或放弃首页尚未保存的服药选择，再修改安排。");return;}
+    const next=copy(MED.value),care=QijianMedication.care(next),id=$("#illness-id").value||uid(),old=care.conditions.find(c=>c.id===id),seen=new Set(),regimens=[];
+    for(const row of $("#illness-regimens").children){
+      const medicineId=row.querySelector('[data-regimen-medicine]').value,dose=Number(row.querySelector('[data-regimen-dose]').value),frequency=Number(row.querySelector('[data-regimen-frequency]').value),m=next.items.find(m=>m.id===medicineId);
+      if(!m||medicineExpired(m)){fail("请选择药箱中未到期的已有药品批次。");return;}
+      if(seen.has(medicineId)){fail("同一项状态中请勿重复选择同一批次药品。");return;}seen.add(medicineId);
+      const previous=old?.regimens.find(r=>r.id===row.dataset.id);
+      // Changed prescriptions get new identities; previously taken doses retain their original snapshots.
+      const changed=previous&&(previous.medicineId!==medicineId||previous.dose!==dose||previous.frequency!==frequency);
+      regimens.push({id:changed?uid():row.dataset.id,medicineId,dose,frequency});
+    }
+    const condition={id,name:$("#illness-name").value.trim(),active:$("#illness-active").checked,notes:$("#illness-plan").value.trim(),regimens};
+    if(old)care.conditions=care.conditions.map(c=>c.id===id?condition:c);else care.conditions.push(condition);
+    try{QijianMedication.withCare(next,care);}catch(error){fail(error.message);return;}
+    if(persist(MED,next)){$("#illness-dialog").close();toast("本项状态与服药需求已保存。");}
+  };
+  $("#medication-reminders").onchange=e=>{
+    const input=e.target.closest('[data-medication-check]');if(!input)return;
+    if(medicationDraftError){renderMedicationReminder();return;}
+    const row=QijianMedication.schedules(MED.value,medicationDay).find(row=>row.key===input.dataset.medicationCheck);if(!row)return;
+    if(medicationDraft.date!==medicationDay)medicationDraft={date:medicationDay,changes:{}};
+    if(input.checked===!!row.record)delete medicationDraft.changes[row.key];else medicationDraft.changes[row.key]=QijianMedication.change(row,input.checked);
+    saveMedicationDraft();renderMedicationReminder();
+  };
+  $("#medication-day").onchange=()=>{
+    const date=$("#medication-day").value;
+    if(!validDate(date)||date>day(new Date())){renderMedicationReminder();return;}
+    if(medicationDraftDirty()&&!confirm("切换日期会放弃尚未保存的服药选择，继续？")){renderMedicationReminder();return;}
+    medicationDay=date;medicationDraft={date,changes:{}};saveMedicationDraft();renderMedicationReminder();
+  };
+  $("#discard-medication").onclick=()=>{
+    if(!confirm("放弃尚未保存的服药选择？已保存的记录和库存不会改变。"))return;
+    medicationDraft={date:medicationDay,changes:{}};saveMedicationDraft();renderMedicationReminder();
+  };
+  $("#save-medication").onclick=()=>{
+    if(medicationDraftError){$("#medication-save-status").textContent=medicationDraftError;return;}
+    if(!Object.keys(medicationDraft.changes).length){$("#medication-save-status").textContent="没有新的选择，未重复扣减库存。";return;}
+    if(medicationDay>day(new Date())){$("#medication-save-status").textContent="不能记录未来日期的服药。";return;}
+    try{
+      const result=QijianMedication.apply(MED.value,medicationDay,medicationDraft.changes);
+      for(const operation of result.operations){const r=operation.record;medLog(result.state,{name:r.medicineName},operation.undo?"撤销服药打卡":"服药打卡",r.amount,(r.date+" · "+r.conditionName+" · "+r.label+" · "+r.unit).slice(0,300));}
+      if(persist(MED,result.state)){
+        medicationDraft={date:medicationDay,changes:{}};saveMedicationDraft();renderMedicationReminder();
+        $("#medication-save-status").textContent="已保存 "+result.operations.length+" 次变更，药箱库存已同步扣减 / 恢复。";
+      }
+    }catch(error){$("#medication-save-status").textContent=error.message+"（未保存的选择仍保留）";}
+  };
+}
 
-  if(persist(MED,next)){
-    toast("生病状态与服药需求已保存。");
-  }
-};
-
+/* Medication condition editor and daily intake ledger. */
 /* ==================== 药箱和游玩的 AI 查询 ==================== */
 
 async function featureAI(form,output,system,question){
@@ -12188,6 +12286,7 @@ window.addEventListener("beforeunload",e=>{
   if(
     (notesReady&&saveRevision!==savedRevision) ||
     dailyDirty ||
+    medicationDraftDirty() ||
     aiBusy
   ){
     e.preventDefault();
@@ -12316,6 +12415,7 @@ async function initializeNotes(){
   renderHome();
 }
 
+initializeMedicationUI();
 initializeChatUI();
 $("#period-start").onclick=()=>setPeriodTransition("start");
 $("#period-end").onclick=()=>setPeriodTransition("end");
@@ -12345,14 +12445,15 @@ if(window.qijianDesktop){
   const names=["备忘录","储物柜","晨起提醒","每日记录","药箱","游玩人生"];
   window.qijianSyncWorkspace={
     prepareUpdate:async()=>{
-      if(dailyDirty||aiBusy||document.querySelector('dialog[open]'))throw Error("请先保存每日记录、完成 AI 操作并关闭编辑弹窗。");
+      if(dailyDirty||aiBusy||medicationDraftDirty()||document.querySelector('dialog[open]'))throw Error("请先保存每日记录和服药选择、完成 AI 操作并关闭编辑弹窗。");
       await persistNotes();
       if(!notesReady||saveRevision!==savedRevision)throw Error("笔记尚未保存成功，暂不重启。");
     },
     specs:[...STORES.map((s,i)=>({key:s.key,label:names[i],empty:syncEmpty[s.key],valid:value=>s.validate(value)})),
       {key:"desktop:notebook",label:"笔记",empty:{folders:[],notes:[]},valid:validNotes}],
     ready:()=>notesReady&&!notesFailed&&STORES.every(s=>s.ok),
-    canApply:()=>!dailyDirty&&!aiBusy&&saveRevision===savedRevision&&!document.querySelector('dialog[open]')&&
+    pendingMedication:medicationDraftDirty,
+    canApply:key=>(key!=="qijian-medicine-v1"||!medicationDraftDirty())&&!dailyDirty&&!aiBusy&&saveRevision===savedRevision&&!document.querySelector('dialog[open]')&&
       (!document.activeElement?.matches('input,textarea,select,[contenteditable="true"]')||!!document.activeElement.closest('#workspace-sync-panel')),
     applied:key=>{
       if(key==="desktop:notebook"){
