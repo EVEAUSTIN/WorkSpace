@@ -4436,7 +4436,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
                 <button data-cmd="bold"><b>B</b></button>
                 <button data-cmd="italic"><i>I</i></button>
                 <button data-cmd="underline"><u>U</u></button>
-                <button data-cmd="strikeThrough"><s>S</s></button>
+                <button data-cmd="strikeThrough"><s>S</s></button><button data-cmd="superscript" title="上标">x² 上标</button><button data-cmd="subscript" title="下标">x₂ 下标</button>
                 <button data-cmd="removeFormat">清格式</button>
               </div>
               <div class="group-label">文字样式</div>
@@ -4489,7 +4489,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
 
             <div class="ribbon-group">
               <div class="group-controls">
-                <button id="insert-code">代码块</button>
+                <button id="insert-formula" type="button">LaTeX 公式</button><button id="insert-code">代码块</button>
                 <button id="insert-mermaid">Mermaid 图</button>
               </div>
               <div class="group-label">代码与图表</div>
@@ -4661,7 +4661,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
 
   <section id="desktop-update-panel" class="panel hidden" style="margin-bottom:16px"><div class="panel-body"><h2>应用更新</h2><p id="desktop-update-status" role="status">正在读取版本信息…</p><div class="row"><button id="desktop-update-check" type="button">检查更新</button><button id="desktop-update-install" type="button" disabled>下载安装并重启</button><a href="https://github.com/EVEAUSTIN/WorkSpace/releases" target="_blank" rel="noopener noreferrer">安装包下载页 ↗</a></div></div></section>
   <section id="workspace-sync-panel" class="panel settings-layout hidden" style="margin-bottom:16px"><div class="panel-body">
-    <h2>云端同步 <small>桌面版 0.7.0</small></h2>
+    <h2>云端同步 <small>桌面版 0.8.0</small></h2>
     <p>本机 SQLite 优先保存，登录后每 15 秒检查更新。两台电脑使用同一应用账号。AI 密钥、天气缓存和本次 AI 对话不上传。</p>
     <p class="muted">环境：emotional-newt-d5gg8duqi1ab13685 · 上海。请在 CloudBase 的 HTTP 网关 → 跨域设置中添加 <strong>localhost:17383</strong>，不加路径；若要求完整来源则填写 http://localhost:17383。</p>
     <form id="workspace-sync-login" class="form-grid">
@@ -5287,6 +5287,8 @@ if(__exports != exports)module.exports = exports;return module.exports}));
 <input type="file" id="media-file" hidden>
 <div id="toast" role="status"></div>
 
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<script src="assets/katex/katex.min.js"></script>
 <script src="assets/medication-core.js"></script>
 <script src="assets/literature-core.js"></script>
 <script src="assets/deepseek-search.js"></script>
@@ -7309,7 +7311,7 @@ function persistNotes(){
 
 const allowedTags=new Set([
   "P","DIV","BR","SPAN",
-  "B","STRONG","I","EM","U","S","STRIKE",
+  "B","STRONG","I","EM","U","S","STRIKE","SUP","SUB",
   "H1","H2","H3","H4","H5","H6",
   "UL","OL","LI","BLOCKQUOTE","PRE","CODE",
   "A","IMG","VIDEO","AUDIO","SOURCE","HR",
@@ -7366,6 +7368,7 @@ function sanitizeHTML(html){
     "white-space"
   ];
 
+  for(const formula of d.body.querySelectorAll("span[data-latex]")){formula.textContent=(formula.getAttribute("data-latex")||"").slice(0,4000);}
   for(const el of [...d.body.querySelectorAll("*")]){
     if(!allowedTags.has(el.tagName)){
       el.replaceWith(...el.childNodes);
@@ -7398,6 +7401,8 @@ function sanitizeHTML(html){
     for(const[k,v]of Object.entries(keep)){
       el.style.setProperty(k,v);
     }
+
+    if(tag==="SPAN"&&typeof old["data-latex"]==="string"&&old["data-latex"].length<=4000){el.setAttribute("data-latex",old["data-latex"]);el.setAttribute("data-display",old["data-display"]==="block"?"block":"inline");el.setAttribute("contenteditable","false");}
 
     if(tag==="A"){
       const h=safeURL(old.href);
@@ -7634,6 +7639,7 @@ function openNote(id){
   $("#paper-color").value=n.color;
   editor.style.backgroundColor=n.color;
   editor.innerHTML=sanitizeHTML(n.html);
+  renderNoteFormulae();
   document.dispatchEvent(new Event("qijian:note-open"));
   $("#note-research-date").value=dailyLoadedDate;
 
@@ -12518,6 +12524,26 @@ async function initializeNotes(){
   renderDailyResearch();
   renderHome();
 }
+
+function renderNoteFormulae(){
+  for(const el of editor.querySelectorAll('span[data-latex]')){
+    try{katex.render(el.dataset.latex,el,{displayMode:el.dataset.display==='block',throwOnError:false,trust:false,maxExpand:500,maxSize:20});}catch{el.textContent=el.dataset.latex;}
+  }
+}
+$("#insert-formula").onclick=()=>{
+  if(!activeNote())return;
+  const source=prompt('输入 LaTeX 公式，例如 \\frac{a}{b}。双击已插入的公式可修改。');
+  if(source===null||!source.trim())return;
+  if(source.length>4000){toast('公式最长 4000 个字符。');return;}
+  try{katex.renderToString(source,{throwOnError:true,trust:false,maxExpand:500,maxSize:20});}catch{toast('LaTeX 公式无法解析，请检查输入。');return;}
+  insertHTML('<span data-latex="'+esc(source)+'" data-display="inline" contenteditable="false">'+esc(source)+'</span>');renderNoteFormulae();
+};
+editor.addEventListener('dblclick',e=>{
+  const el=e.target.closest('span[data-latex]');if(!el||!editor.contains(el))return;
+  const source=prompt('修改 LaTeX 公式：',el.dataset.latex);if(source===null||!source.trim()||source.length>4000)return;
+  try{katex.renderToString(source,{throwOnError:true,trust:false,maxExpand:500,maxSize:20});}catch{toast('LaTeX 公式无法解析，请检查输入。');return;}
+  el.dataset.latex=source;renderNoteFormulae();captureEditor();
+});
 
 initializeMedicationUI();
 initializeChatUI();

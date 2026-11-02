@@ -9,7 +9,7 @@ function startServer(root) {
     let pathname;
     try { pathname=decodeURIComponent(new URL(req.url,ORIGIN).pathname); } catch { res.writeHead(400).end();return; }
     const relative=pathname.slice(1);
-    if(!/^(index\.html|cloudbase-test\.html|assets\/[a-zA-Z0-9_.-]+)$/.test(relative)){res.writeHead(404).end();return;}
+    if(!/^(index\.html|cloudbase-test\.html|assets\/(?:[a-zA-Z0-9_.-]+|katex\/(?:[a-zA-Z0-9_.-]+|fonts\/[a-zA-Z0-9_.-]+)))$/.test(relative)){res.writeHead(404).end();return;}
     const filename=path.join(root,relative);
     const type=filename.endsWith('.html')?'text/html; charset=utf-8':filename.endsWith('.js')?'text/javascript; charset=utf-8':filename.endsWith('.css')?'text/css; charset=utf-8':'application/octet-stream';
     fs.readFile(filename,(error,data)=>{
