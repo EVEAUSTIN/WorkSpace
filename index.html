@@ -1634,6 +1634,10 @@ dialog textarea.code-input{
 @media(max-width:600px){.regimen-row{grid-template-columns:1fr 1fr}.regimen-row label:first-child{grid-column:1/-1}}
 
 .lit-journal{font-size:17px;font-weight:650;line-height:1.6;margin:8px 0;overflow-wrap:anywhere}.lit-journal span{font-size:13px;font-weight:500}.lit-translation{font-size:16px;line-height:1.7;margin:8px 0 14px;color:var(--green)}.lit-lead .lit-translation{color:#d8e8cf}.lit-lead .lit-journal{color:#eff6e8}#lit-notice:empty{display:none}
+
+#page-notes .notes-layout.notes-nav-hidden{grid-template-columns:minmax(0,1fr)}
+#page-notes .notes-nav-hidden>.folders,#page-notes .notes-nav-hidden>.document-list{display:none}
+#page-notes .notes-toolbar-hidden #toolbar{display:none}
 </style>
 <script>
 /**
@@ -4296,12 +4300,14 @@ if(__exports != exports)module.exports = exports;return module.exports}));
       <p class="subtitle">收好灵感、知识和科研过程。</p>
     </div>
     <div class="row">
+      <button type="button" id="toggle-note-navigation" aria-controls="notes-folders notes-documents" aria-expanded="true">隐藏文档栏</button>
+      <button type="button" id="toggle-note-toolbar" aria-controls="toolbar" aria-expanded="true">隐藏功能栏</button>
       <button class="primary" id="new-note-top">＋ 新建文档</button>
     </div>
   </header>
 
   <div class="notes-layout">
-    <section class="folders">
+    <section class="folders" id="notes-folders">
       <div class="section-label">我的文件夹</div>
       <div id="folder-list"></div>
       <div class="folder-tools">
@@ -4311,7 +4317,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
       </div>
     </section>
 
-    <section class="document-list">
+    <section class="document-list" id="notes-documents">
       <div class="document-list-top">
         <input id="note-search" type="search" placeholder="搜索文档">
         <button id="new-note">＋ 新建文档</button>
@@ -4454,6 +4460,8 @@ if(__exports != exports)module.exports = exports;return module.exports}));
               </div>
               <div class="group-label">段落对齐</div>
             </div>
+
+            <div class="ribbon-group"><div class="group-controls"><label>首行缩进 <select id="note-first-indent" aria-label="首行缩进"><option value="0">不缩进</option><option value="1em">1 字符</option><option value="2em">2 字符</option><option value="4em">4 字符</option><option value="" disabled>自定义 / 混合</option></select></label><label>行距 <select id="note-line-spacing" aria-label="行距"><option value="mixed" disabled>自定义 / 混合</option><option value="">默认</option><option value="1">单倍</option><option value="1.15">1.15 倍</option><option value="1.5">1.5 倍</option><option value="1.75">1.75 倍</option><option value="2">2 倍</option><option value="2.5">2.5 倍</option><option value="3">3 倍</option></select></label></div><div class="group-label">段落格式（选中多段可批量设置）</div></div>
 
             <div class="ribbon-group">
               <div class="group-controls">
@@ -4653,7 +4661,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
 
   <section id="desktop-update-panel" class="panel hidden" style="margin-bottom:16px"><div class="panel-body"><h2>应用更新</h2><p id="desktop-update-status" role="status">正在读取版本信息…</p><div class="row"><button id="desktop-update-check" type="button">检查更新</button><button id="desktop-update-install" type="button" disabled>下载安装并重启</button><a href="https://github.com/EVEAUSTIN/WorkSpace/releases" target="_blank" rel="noopener noreferrer">安装包下载页 ↗</a></div></div></section>
   <section id="workspace-sync-panel" class="panel settings-layout hidden" style="margin-bottom:16px"><div class="panel-body">
-    <h2>云端同步 <small>桌面版 0.6.0</small></h2>
+    <h2>云端同步 <small>桌面版 0.7.0</small></h2>
     <p>本机 SQLite 优先保存，登录后每 15 秒检查更新。两台电脑使用同一应用账号。AI 密钥、天气缓存和本次 AI 对话不上传。</p>
     <p class="muted">环境：emotional-newt-d5gg8duqi1ab13685 · 上海。请在 CloudBase 的 HTTP 网关 → 跨域设置中添加 <strong>localhost:17383</strong>，不加路径；若要求完整来源则填写 http://localhost:17383。</p>
     <form id="workspace-sync-login" class="form-grid">
@@ -7351,6 +7359,7 @@ function sanitizeHTML(html){
     "font-style",
     "text-decoration",
     "text-align",
+    "text-indent",
     "margin-left",
     "padding-left",
     "line-height",
@@ -7625,6 +7634,7 @@ function openNote(id){
   $("#paper-color").value=n.color;
   editor.style.backgroundColor=n.color;
   editor.innerHTML=sanitizeHTML(n.html);
+  document.dispatchEvent(new Event("qijian:note-open"));
   $("#note-research-date").value=dailyLoadedDate;
 
   renderFolders();
@@ -12564,6 +12574,7 @@ if(window.qijianDesktop){
 <script src="assets/workspace-sync-core.js"></script>
 <script src="assets/workspace-sync.js"></script>
 <script src="assets/desktop-updates.js"></script>
+<script src="assets/note-formatting.js"></script>
 </body>
 </html>
   
