@@ -4344,6 +4344,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
               <select id="note-folder"></select>
             </div>
             <div class="row">
+              <button id="export-note" type="button">导出文档（GPT 可读）</button>
               <button id="duplicate-note">复制</button>
               <button id="delete-note" class="danger">删除</button>
             </div>
@@ -4661,7 +4662,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
 
   <section id="desktop-update-panel" class="panel hidden" style="margin-bottom:16px"><div class="panel-body"><h2>应用更新</h2><p id="desktop-update-status" role="status">正在读取版本信息…</p><div class="row"><button id="desktop-update-check" type="button">检查更新</button><button id="desktop-update-install" type="button" disabled>下载安装并重启</button><a href="https://github.com/EVEAUSTIN/WorkSpace/releases" target="_blank" rel="noopener noreferrer">安装包下载页 ↗</a></div></div></section>
   <section id="workspace-sync-panel" class="panel settings-layout hidden" style="margin-bottom:16px"><div class="panel-body">
-    <h2>云端同步 <small>桌面版 0.9.0</small></h2>
+    <h2>云端同步 <small>桌面版 0.10.0</small></h2>
     <p>本机 SQLite 优先保存，登录后每 15 秒检查更新。两台电脑使用同一应用账号。AI 密钥、天气缓存和本次 AI 对话不上传。</p>
     <p class="muted">环境：emotional-newt-d5gg8duqi1ab13685 · 上海。请在 CloudBase 的 HTTP 网关 → 跨域设置中添加 <strong>localhost:17383</strong>，不加路径；若要求完整来源则填写 http://localhost:17383。</p>
     <form id="workspace-sync-login" class="form-grid">
@@ -12607,6 +12608,7 @@ if(window.qijianDesktop){
 <script src="assets/workspace-sync.js"></script>
 <script src="assets/desktop-updates.js"></script>
 <script src="assets/note-formatting.js"></script>
+<script src="assets/note-export.js"></script>
 </body>
 </html>
   
